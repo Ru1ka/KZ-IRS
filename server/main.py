@@ -57,5 +57,36 @@ def solve():
     cv2.imwrite(os.path.join(const.path.images, f'{cam2}.png'), cam2.read())
     task.stop()
 
+
+def load_task(n):
+    pass
+
+
+def init(debug=True):
+    from vision import detectAruco, getMarkupPositions, detectRobot
+    from buildGraph import getGraph, refactorGraph
+    from algorithms import getRoadLines, extendLines, getResultPositions
+    import saveImg as svimg
+
+    # Получение точек от cv2
+    markupArray = getMarkupPositions()
+    dictAruco = detectAruco()
+    robotPos = detectRobot()
+    if debug:
+        pass
+        
+    # Сборка и продление линий дороги
+    roadLines = getRoadLines(markupArray)
+    extendedRoadLines = extendLines(roadLines)
+    # Сборка графа
+    graph = getGraph(extendedRoadLines, distCrossroads=20)
+    graph = refactorGraph(graph)  # Двухстороннее движение
+
+    # graph = addArucos(img, graph, dictAruco, mainPoints)  # Связь графом с ArUco метками
+    # graph = addPoints(img, graph, mainPoints)  # Связь графа c другими точками (веротяно не нужно)
+
+    # path = getResultPositions(graph, robotPos)
+
+
 if __name__ == '__main__':
     solve()

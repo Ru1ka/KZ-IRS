@@ -14,3 +14,5 @@ def buildGraphShow(img, points, lines):
         if point.isCrossroad:
             cv2.circle(imgLines, point.pos, 5, (255, 255, 0), 2)
     showImage(imgLines)
+
+

@@ -8,5 +8,15 @@ def getUndistortedImage(img, mtx, dist):
     dst = dst[y:y+h, x:x+w]
     return dst
 
+
+def detectAruco():
+    pass
+
+def getMarkupPositions():
+    pass
+
+def detectRobot():
+    pass
+
 def getFullScene(leftImg, rightImg):
     pass

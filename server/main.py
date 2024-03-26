@@ -58,34 +58,43 @@ def solve():
     task.stop()
 
 
-def load_task(n):
-    pass
-
-
 def init(debug=True):
     from vision import detectAruco, getMarkupPositions, detectRobot
     from buildGraph import getGraph, refactorGraph
     from algorithms import getRoadLines, extendLines, getResultPositions
     import saveImg as svimg
 
+    img = ...
+
     # Получение точек от cv2
-    markupArray = getMarkupPositions()
+    contours, markupArray = getMarkupPositions()
     dictAruco = detectAruco()
     robotPos = detectRobot()
     if debug:
-        pass
+        svimg.markupPositions(img, contours, markupArray)
+        svimg.dictAruco(img, dictAruco)
+        svimg.robotPos(img, detectRobot)
         
     # Сборка и продление линий дороги
     roadLines = getRoadLines(markupArray)
     extendedRoadLines = extendLines(roadLines)
+    if debug:
+        svimg.roadLines(img, roadLines)
+        svimg.extendLines(img, extendedRoadLines)
     # Сборка графа
     graph = getGraph(extendedRoadLines, distCrossroads=20)
-    graph = refactorGraph(graph)  # Двухстороннее движение
+    if debug:
+        svimg.saveGraph(img, graph)
 
+    graph = refactorGraph(graph)  # Двухстороннее движение
+    if debug:
+        svimg.saveGraph(img, graph)
     # graph = addArucos(img, graph, dictAruco, mainPoints)  # Связь графом с ArUco метками
     # graph = addPoints(img, graph, mainPoints)  # Связь графа c другими точками (веротяно не нужно)
 
-    # path = getResultPositions(graph, robotPos)
+    path = getResultPositions(graph, robotPos)
+    if debug:
+        svimg.savePath(img, path)
 
 
 if __name__ == '__main__':

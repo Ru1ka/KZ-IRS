@@ -5,7 +5,7 @@ import socket
 
 ## Здесь должно работать ваше решение
 def solve():
-    from nto.final import Task
+    
     '''## Пример отправки сообщения на робота по протоколу udp
     UDP_IP = '192.168.2.137'
     UDP_PORT = 5005
@@ -18,7 +18,9 @@ def solve():
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # UDP
     sock.sendto(MESSAGE, (UDP_IP, UDP_PORT))'''
 
-    ## Запуск задания и таймера (внутри задания)
+    # Запуск задания и таймера (внутри задания)
+    from nto.final import Task
+
     task = Task()
     task.start()
     print(task.getTask())

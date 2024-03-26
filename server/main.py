@@ -23,9 +23,8 @@ def solve():
     print(task.getTask())
 
     sceneImg = task.getTaskScene()
-    while cv2.waitKey(1) != 27:
-        cv2.imshow('some_1', sceneImg[0])
-        cv2.imshow('some_2', sceneImg[1])
+    cv2.imwrite('images/Camera1.png', sceneImg[0])
+    cv2.imwrite('images/Camera2.png', sceneImg[1])
     task.stop()
 
 if __name__ == '__main__':

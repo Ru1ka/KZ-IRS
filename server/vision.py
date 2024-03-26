@@ -9,13 +9,16 @@ def getUndistortedImage(img, mtx, dist):
     return dst
 
 
-def detectAruco():
+def detectAruco() -> dict:
+    "{int: (x, y)}"
     pass
 
 def getMarkupPositions():
+    "-> [(x, y), ...]"
     pass
 
 def detectRobot():
+    "-> (x, y)"
     pass
 
 def getFullScene(leftImg, rightImg):

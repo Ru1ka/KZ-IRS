@@ -166,3 +166,18 @@ def direction(points):
             v1, v2 = min(v1, v2, key=lambda x: (x[0]**2 + x[1]**2)**0.5)
             return perpendicularUnitVector(v1, v2)
     raise Exception("Invalid robot mark")
+
+
+def routeRefactor(route, dictAruco):
+    res = []
+    points = {} #  {"p_{int}": (x, y)}
+    for i in route:
+        if "marker_id" in i:
+            marker_id = int(i["marker_id"])
+            pos = dictAruco[marker_id]
+        else:
+            pos = [i["coordinates"]]
+        res += [i["name"]]
+        points[i["name"]] = pos
+    return points, res
+

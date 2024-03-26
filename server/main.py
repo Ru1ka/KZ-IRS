@@ -40,10 +40,15 @@ def solve():
         def send(self, message):
             self.sock.sendto(message, (self.ip, self.port))
 
+        def on(self):
+            self.send(b'on')
+
     task = Task()
     task.start()
+    print(task.getTask())
 
-    robot = Robot('10.128.74.95', 5005)
+    robot = Robot('10.128.73.81', 5005)
+    robot.on()
 
     cam1 = Camera(0, const.cam1.matrix, const.cam1.distortion)
     cam2 = Camera(1, const.cam2.matrix, const.cam2.distortion)

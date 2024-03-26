@@ -7,3 +7,6 @@ def getUndistortedImage(img, mtx, dist):
     x, y, w, h = roi
     dst = dst[y:y+h, x:x+w]
     return dst
+
+def getFullScene(leftImg, rightImg):
+    pass

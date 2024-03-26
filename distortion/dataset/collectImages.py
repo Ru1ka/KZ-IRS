@@ -2,10 +2,10 @@ import cv2
 import os
 
 def makeNewPhoto(img1, img2):
-    fileNum1 = len(os.listdir('dataset/cam1/'))
-    #fileNum2 = len(os.listdir('dataset/cam2/'))
-    cv2.imwrite(f'dataset/cam1/{fileNum1}.png', img1)
-    #cv2.imwrite(f'dataset/cam2/{fileNum2}.png', img2)
+    fileNum1 = len(os.listdir('cam1/'))
+    fileNum2 = len(os.listdir('cam2/'))
+    cv2.imwrite(f'cam1/{fileNum1}.png', img1)
+    cv2.imwrite(f'cam2/{fileNum2}.png', img2)
 
 cam1 = cv2.VideoCapture('http://student:nto2024@10.128.73.31/mjpg/video.mjpg')
 cam2 = cv2.VideoCapture('http://student:nto2024@10.128.73.38/mjpg/video.mjpg')

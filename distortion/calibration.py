@@ -19,7 +19,7 @@ def getObjAndImgPoints(images, sizeBoard, lenCell, show=False):
     # Arrays to store object points and image points from all the images.
     objectPoints = []  # 3d point in real world space
     imgPoints = []  # 2d points in image plane.
-    ignore = [0, 37]
+    ignore = [0, 37, 76, 39, 40, 41]
     for i, img in enumerate(images):
         print(i)
         if i in ignore: continue
@@ -35,8 +35,7 @@ def getObjAndImgPoints(images, sizeBoard, lenCell, show=False):
             cv2.drawChessboardCorners(img, (height, width), corners2, ret)
             kk = 1
             gimg = cv2.resize(img, (int(img.shape[1] * kk), int(img.shape[0] * kk)))
-            cv2.imshow('Image', gimg)
-            cv2.waitKey(100)
+            #while cv2.waitKey(1) != 32: cv2.imshow('Image', gimg)
             cv2.destroyAllWindows()
     return objectPoints, imgPoints
 

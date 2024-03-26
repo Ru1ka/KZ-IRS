@@ -1,6 +1,5 @@
 from functools import lru_cache
-from math import hypot, ceil
-
+from math import hypot, ceil, acos, pi
 # Подготовка к построению графа:
 
 @lru_cache(maxsize=200)
@@ -58,3 +57,77 @@ def extendLines(lines, k=2):
 
         extendLines.append(line)
     return extendLines
+
+
+
+# Остальное:
+def getAngleBetweenLineAndAxis(line):
+    startPosLine, endPosLine = line
+    vector = [(endPosLine[axis] - startPosLine[axis]) for axis in range(2)]
+    angles = {'x': pi, 'y': pi}
+    for i, axis in enumerate(angles):
+        scalarProduct = vector[i]
+        lengthsProduct = hypot(vector[0], vector[1])
+        if lengthsProduct == 0: continue
+        resAngle = acos(scalarProduct / lengthsProduct) if axis == 'x' else acos(scalarProduct / lengthsProduct)
+        if scalarProduct < 0: resAngle *= -1
+        angles[axis] = resAngle
+    return angles
+
+
+def getPosRightSideSegment(startPosLine, endPosLine, deviationLen=60):
+    if startPosLine[0] < 20 or endPosLine[0] < 20:
+        print(startPosLine, endPosLine)
+    vectorAB = [(endPosLine[axis] - startPosLine[axis]) for axis in range(2)]
+    lengthVector = hypot(abs(vectorAB[0]), abs(vectorAB[1]))
+    centerPoint = ((startPosLine[0] + endPosLine[0]) / 2, (startPosLine[1] + endPosLine[1]) / 2)
+    if lengthVector > 0:
+        resultVector = [(deviationLen * vectorAB[1]) / lengthVector,
+                        (deviationLen * vectorAB[0]) / lengthVector]
+    else:
+        resultVector = [0, 0]
+    for pr in [1, -1]:
+        angles = getAngleBetweenLineAndAxis((startPosLine, endPosLine))
+        needPosX, needPosY = (resultVector[0] * pr), (resultVector[1] * pr)
+        if angles['x'] > 0 and angles['y'] > 0:
+            needPosX, needPosY = needPosX * 1, needPosY * -1
+        elif angles['x'] < 0 and angles['y'] > 0:
+            needPosX, needPosY = needPosX * 1, needPosY * -1
+        elif angles['x'] < 0 and angles['y'] < 0:
+            needPosX, needPosY = needPosX * 1, needPosY * -1
+        elif angles['x'] > 0 and angles['y'] < 0:
+            needPosX, needPosY = needPosX * -1, needPosY * 1
+        needPos = (round(centerPoint[0] + needPosX), round(centerPoint[1] + needPosY))
+        vectorAC = [(needPos[axis] - startPosLine[axis]) for axis in range(2)]
+        deviation = vectorAB[0] * vectorAC[1] - vectorAB[1] * vectorAC[0]
+        if deviation > 0:
+            return needPos
+    return (ceil(centerPoint[0]), ceil(centerPoint[1]))
+
+
+def findPathBFS(start, end):
+    queue = [(start, [start])]
+    while queue:
+        vertex, path = queue.pop(0)
+        for nxt in vertex.neighbours:
+            if nxt in path: continue
+            if nxt == end:
+                return path + [nxt]
+            else:
+                queue.append((nxt, path + [nxt]))
+    return None
+
+
+def getResultPositions(graph, robotPos, mainPoints):
+    plist = list(graph.values())
+    plist.sort(key=lambda p: getDistanceBetweenPoints(p.pos, tuple(robotPos)))
+    start = plist[0]
+    mainPoints = [i["name"] for i in mainPoints]
+    last = start
+    resultPositions = [start.pos]
+    for point in mainPoints:
+        point = graph[point]
+        path = findPathBFS(last, point)
+        last = point
+        resultPositions += [p.pos for p in path[1:]]
+    return resultPositions

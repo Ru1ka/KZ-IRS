@@ -10,9 +10,14 @@ def getImages():
 
 # МНЕ НУЖНО:
 def detectAruco(areaRange=[2000, 4000], coefApprox=0.03, show=False) -> dict:
-    # -> {f"aruco_{id}": tuple(x, y)}
+    # -> {int: tuple(x, y)}
     pass
 
 def getMarkupPositions(squareRange=[0, 120], show=False) -> list:
     # -> [центр линии разметки, ...]
+    pass
+
+
+def detectRobot() -> tuple:
+    # -> (x, y)
     pass

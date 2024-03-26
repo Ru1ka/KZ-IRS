@@ -1,5 +1,5 @@
 from graph import Line, Point
-from algorithms import getDistanceBetweenPoints
+from algorithms import getDistanceBetweenPoints, getPosRightSideSegment
 
 def addCrossroads(points, lines, dist):
     # PS тут много квадратичных сложностей, но концов точек меньше 200 штук, а перекрестков еще меньше
@@ -78,8 +78,6 @@ def addCrossroads(points, lines, dist):
     #     points.pop(point2.id)
     #     crossroads.remove(point2)
 
-
-
     # # Удаляем крайние точки линий
     # print(len(points))
     # for line in lines.values():
@@ -111,7 +109,7 @@ def addCrossroads(points, lines, dist):
     return points
 
 
-def getGraph(img, lines, distCros=20, show=False):
+def getGraph(lines, distCrossroads=20):
     # Рефакторим данные, тк на данном этапе требуется двухсторонняя связь
     points = {}
     newLines = {}
@@ -133,10 +131,104 @@ def getGraph(img, lines, distCros=20, show=False):
         idLines += 1
     lines = newLines
 
-    points = addCrossroads(img, points, lines, distCros, show=show)
+    points = addCrossroads(points, lines, distCrossroads)
 
     for line in lines.values():
         line.endPos.isEnd = True
         line.startPos.isEnd = True
+
+    return points
+
+
+def refactorGraph(points):
+    crossroads = list(filter(lambda p: p.isCrossroad, points.values()))
+    newPoints = {}
+    congruence = {}
+    idInt = 0
+    for crossroad in crossroads:
+        newCrossroad = Point(idInt, crossroad.pos, isCrossroad=True)
+        newPoints[idInt] = newCrossroad
+        congruence[crossroad.id] = newCrossroad
+        idInt += 1
+
+    for crossroad in crossroads:
+        newCrossroad = congruence[crossroad.id]
+        for point in crossroad.neighbours:
+            last = crossroad
+            cur = point
+            lastNewPoint = newCrossroad
+            first = True
+            while True:
+                if cur.isCrossroad:
+                    lastNewPoint.addNeighbour(congruence[cur.id])
+                    break
+                if not first:
+                    newPos = getPosRightSideSegment(last.pos, cur.pos)
+                else:
+                    newPos = cur.pos
+                    first = False
+                newPoint = Point(idInt, newPos)
+                lastNewPoint.addNeighbour(newPoint)
+                newPoints[idInt] = newPoint
+                idInt += 1
+                if cur.isCrossroad:
+                    break
+                for nxt in cur.neighbours:
+                    if nxt != last:
+                        last = cur
+                        cur = nxt
+                        lastNewPoint = newPoint
+                        break
+
+    return newPoints
+
+
+def addArucos(points, arucos, mainPoints):
+    acucoId2PointId = {}
+    for point in mainPoints:
+        if "marker_id" in point:
+            acucoId2PointId[f'p_{point["marker_id"]}'] = point["name"]
+
+    pointsList = list(points.values())
+    for arucoId, aruco in arucos.items():
+        pointsList.sort(key=lambda p: getDistanceBetweenPoints(p.pos, aruco))
+        # Берем 3 точки, сортируем по ходу движения
+        closest = pointsList[:3]
+        first = closest
+        for i in closest:
+            for neighbour in i.neighbours:
+                if neighbour in closest:
+                    first.remove(neighbour)
+        first = first[0]
+        closest2 = [first]
+        for i in range(2):
+            closest2.append(closest2[-1].neighbours[0])
+        closest = closest2
+        if arucoId in acucoId2PointId:
+            pointId = acucoId2PointId[arucoId]
+        else:
+            pointId = f'p_{arucoId}'
+        arucoPoint = Point(pointId, aruco, isAruco=True, neighbours=[closest[2]])
+        points[pointId] = arucoPoint
+        closest[0].addNeighbour(arucoPoint)
+
+    return points
+
+
+def addPoints(points, addPoints):
+    pointsList = list(points.values())
+    for pointData in addPoints:
+        if "coordinates" in pointData and pointData["name"] not in points:
+            pointsList.sort(key=lambda p: getDistanceBetweenPoints(p.pos, tuple(pointData["coordinates"])))
+            closest = pointsList[0]
+            if closest.isCrossroad:
+                newPoint = Point(pointData["name"], tuple(pointData["coordinates"]), neighbours=[closest])
+                points[pointData["name"]] = newPoint
+                closest.addNeighbour(newPoint)
+            else:
+                closest.pos = tuple(pointData["coordinates"])
+                points.pop(closest.id)
+                closest.id = pointData["name"]
+                points[pointData["name"]] = closest
 
     return points

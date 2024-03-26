@@ -131,3 +131,38 @@ def getResultPositions(graph, robotPos, mainPoints):
         last = point
         resultPositions += [p.pos for p in path[1:]]
     return resultPositions
+
+POINTS_COMB = [
+(0, 0, 1, 1),
+(0, 1, 0, 1),
+(0, 1, 1, 0),
+(1, 0, 0, 1),
+]
+
+def perpendicularUnitVector(v1, v2):
+    # Функция для вычитания векторов
+    diff_vector = [v2[i] - v1[i] for i in range(len(v1))]
+    # Функция для вычисления длины вектора
+    length = sum(comp ** 2 for comp in diff_vector) ** 0.5
+    # Функция для нормализации вектора
+    unit_vector = [comp / length for comp in diff_vector]
+    # Поворачиваем единичный вектор на 90 градусов, чтобы получить перпендикулярный вектор
+    perpendicular_vector = [unit_vector[1], -unit_vector[0]]
+
+    return perpendicular_vector
+
+def direction(points):
+    for i in POINTS_COMB:
+        l1 = []
+        l2 = []
+        for j in range(len(i)):
+            if POINTS_COMB[j] == 0:
+                l1 += [points[j]]
+            else:
+                l2 += [points[j]]
+        v1 = [l1[0][0] + l1[1][0], l1[0][1] + l1[1][1]]
+        v2 = [l2[0][0] + l2[1][0], l2[0][1] + l2[1][1]]
+        if round(v1[0] / v2[0], 3) == round(v1[1] / v2[1], 3):
+            v1, v2 = min(v1, v2, key=lambda x: (x[0]**2 + x[1]**2)**0.5)
+            return perpendicularUnitVector(v1, v2)
+    raise Exception("Invalid robot mark")

@@ -4,6 +4,14 @@ import socket
 import os
 from const import ConstPlenty
 from vision import *
+from fastapi import FastAPI
+
+from vision import detectAruco, getMarkupPositions, detectRobot
+from buildGraph import getGraph, refactorGraph
+from algorithms import getRoadLines, extendLines, getResultPositions, routeRefactor
+import saveImg as svimg
+
+app = FastAPI()
 
 # вывести текущую директорию
 const = ConstPlenty()
@@ -56,37 +64,57 @@ def solve():
 
     cv2.imwrite(os.path.join(const.path.images, f'{cam1}.png'), cam1.read())
     cv2.imwrite(os.path.join(const.path.images, f'{cam2}.png'), cam2.read())
+
+    # cur = 0
+    # path = init()
+
+    @app.get("/robot_ping")
+    def robot_ping():
+        return {"position", detectRobot()}
+
     task.stop()
 
 
-def load_task(n):
-    pass
+def init(task, debug=True):
+    img = ...
 
-
-def init(debug=True):
-    from vision import detectAruco, getMarkupPositions, detectRobot
-    from buildGraph import getGraph, refactorGraph
-    from algorithms import getRoadLines, extendLines, getResultPositions
-    import saveImg as svimg
+    route = ...  # загрузить из task
 
     # Получение точек от cv2
-    markupArray = getMarkupPositions()
+    contours, markupArray = getMarkupPositions()
     dictAruco = detectAruco()
     robotPos = detectRobot()
     if debug:
-        pass
+        svimg.markupPositions(img, contours, markupArray)
+        svimg.dictAruco(img, dictAruco)
+        svimg.robotPos(img, detectRobot)
+    
+    # Сопоставление route c ArUco
+    route = routeRefactor(route, dictAruco)
+
         
     # Сборка и продление линий дороги
     roadLines = getRoadLines(markupArray)
     extendedRoadLines = extendLines(roadLines)
+    if debug:
+        svimg.roadLines(img, roadLines)
+        svimg.extendLines(img, extendedRoadLines)
     # Сборка графа
     graph = getGraph(extendedRoadLines, distCrossroads=20)
-    graph = refactorGraph(graph)  # Двухстороннее движение
+    if debug:
+        svimg.saveGraph(img, graph)
 
+    graph = refactorGraph(graph)  # Двухстороннее движение
+    if debug:
+        svimg.saveGraph(img, graph)
     # graph = addArucos(img, graph, dictAruco, mainPoints)  # Связь графом с ArUco метками
     # graph = addPoints(img, graph, mainPoints)  # Связь графа c другими точками (веротяно не нужно)
 
-    # path = getResultPositions(graph, robotPos)
+    path = getResultPositions(graph, robotPos)
+    if debug:
+        svimg.savePath(img, path)
+
+    return path
 
 
 if __name__ == '__main__':

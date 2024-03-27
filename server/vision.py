@@ -23,6 +23,19 @@ def rotateImage(image, angle):
     result = cv2.warpAffine(image, rot_mat, image.shape[1::-1], flags=cv2.INTER_LINEAR)
     return result
 
+
+def detectAruco() -> dict:
+    "{int: (x, y)}"
+    pass
+
+def getMarkupPositions():
+    "-> [(x, y), ...]"
+    pass
+
+def detectRobot():
+    "-> (x, y)"
+    pass
+
 def getFullScene(leftImg, rightImg):
     k = 0.8035
     rightImg = cv2.resize(rightImg, (int(rightImg.shape[1] * k), int(rightImg.shape[0] * k)))

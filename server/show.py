@@ -21,8 +21,8 @@ def showGraph(img, points):
     # рисуем граф
     for point in points.values():
         for neighbour in point.neighbours:
-            cv2.circle(imgLines, point.pos, 15, (161, 115, 72), 2)
             cv2.line(imgLines, point.pos, neighbour.pos, (76, 235, 23), 2)
+            cv2.circle(imgLines, point.pos, 5, (153, 0, 204), 2)
 
     showImage(imgLines)
 

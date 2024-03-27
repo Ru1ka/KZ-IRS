@@ -156,13 +156,13 @@ def getDirection(points):
         l1 = []
         l2 = []
         for j in range(len(i)):
-            if POINTS_COMB[j] == 0:
+            if i[j] == 0:
                 l1 += [points[j]]
             else:
                 l2 += [points[j]]
-        v1 = [l1[0][0] + l1[1][0], l1[0][1] + l1[1][1]]
-        v2 = [l2[0][0] + l2[1][0], l2[0][1] + l2[1][1]]
-        if round(v1[0] / v2[0], 3) == round(v1[1] / v2[1], 3):
+        v1 = [l1[0][0] - l1[1][0], l1[0][1] - l1[1][1]]
+        v2 = [l2[0][0] - l2[1][0], l2[0][1] - l2[1][1]]
+        if abs(round(v1[0] / v2[0], 3)) == abs(round(v1[1] / v2[1], 3)):
             v1, v2 = min(v1, v2, key=lambda x: (x[0]**2 + x[1]**2)**0.5)
             return perpendicularUnitVector(v1, v2)
     raise Exception("Invalid robot mark")

@@ -1,67 +1,133 @@
 import cv2
 import numpy as np
-from server.vision import showImage
-
-ALL_ARUCO_KEYS = [1, 2, 3, 5, 6, 7, 10, 11, 12, 13, 14, 15, 17, 18, 19, 21, 22, 23, 26, 27, 28, 29, 30, 31, 33, 35, 37,
-                  39, 41, 42, 43, 44, 45, 46, 47, 49, 51, 53, 55, 57, 58, 59, 60, 61, 62, 63, 69, 70, 71, 76, 77, 78,
-                  79, 85, 86, 87, 92, 93, 94, 95, 97, 98, 99, 101, 102, 103, 105, 106, 107, 109, 110, 111, 113, 114,
-                  115, 117, 118, 119, 121, 122, 123, 125, 126, 127, 141, 142, 143, 157, 158, 159, 171, 173, 175, 187,
-                  189, 191, 197, 199, 205, 206, 207, 213, 215, 221, 222, 223, 229, 231, 237, 239, 245, 247, 253, 255,
-                  327, 335, 343, 351, 367, 383]
 
 
-def getMaskBinArray(mask):
-    N = 5
-    cell_width = mask.shape[1] / N
-    cell_height = mask.shape[0] / N
-    cell_cx = cell_width / 2
-    cell_cy = cell_height / 2
+def perpendicular_intersection(m1, b1, m2, b2):
+    if m1 == 0:  # Проверка деления на ноль
+        x = -b1 / m1
+        y = m2 * x + b2
+    elif m2 == 0:  # Проверка деления на ноль
+        x = -b2 / m2
+        y = m1 * x + b1
+    else:
+        x = (b2 - b1) / (m1 - m2)
+        y = m1 * x + b1
+    return x, y
 
-    binarray = []
-    is_border = True
 
-    for i in range(N):
-        for j in range(N):
-            y = round(i*cell_width + cell_cx)
-            x = round(j*cell_height + cell_cy)
-            color = round(np.average(mask[y-1:y+1, x-1:x+1]) / 255)
-            if (i == 0 or i == N - 1) or (j == 0 or j == N - 1):
-                is_border = is_border and (color == 0)
-                continue
-            binarray.append(color)
-    if not is_border: return []
+def intersection(p1, p2, p3, p4):
+    x1, y1 = p1
+    x2, y2 = p2
+    x3, y3 = p3
+    x4, y4 = p4
+
+    print(p1, p2)
+    print(p3, p4)
+    scalar = (x2 - x1) * (x4 - x3) + (y2 - y1) * (y4 - y3)
+    print(scalar)
+    # Если прямая 1 вертикальная (x2 = x1)
+    if x2 == x1:
+        # Угловой коэффициент прямой 2
+        m2 = (y4 - y3) / (x4 - x3)
+        # x-координата точки пересечения будет равна x1
+        x = x1
+        # Находим y-координату точки пересечения
+        y = m2 * (x - x3) + y3
+        return x, y
     
-def bin2Dec(binarray):
-    marker_id = 0
-    n = len(binarray)
-    for i in range(n - 1, -1, -1): marker_id += binarray[i] * 2**(n-i-1)
-    if marker_id in ALL_ARUCO_KEYS: return marker_id
-    else: return -1
+    # Если прямая 2 вертикальная (x4 = x3)
+    if x4 == x3:
+        # Угловой коэффициент прямой 1
+        m1 = (y2 - y1) / (x2 - x1)
+        # x-координата точки пересечения будет равна x3
+        x = x3
+        # Находим y-координату точки пересечения
+        y = m1 * (x - x1) + y1
+        return x, y
+    
+    # Угловые коэффициенты прямых
+    m1 = (y2 - y1) / (x2 - x1)
+    m2 = (y4 - y3) / (x4 - x3)
+    
+    # Если прямые параллельны, то точки пересечения нет
+    if m1 == m2:
+        return None
 
-def detectAruco(img, areaRange=10000, margin=10):
-    imgGray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    imgBinary = cv2.adaptiveThreshold(imgGray, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 181, 13)
-    showImage(imgBinary)
-    contours, hi = cv2.findContours(imgBinary, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-    for i, cnt in enumerate(contours):
-        if cv2.contourArea(cnt) < areaRange: continue
-        if hi[0][i][2] == -1 or hi[0][i][3] == -1: continue
-        c, dim, ang = cv2.minAreaRect(cnt)
-        if max(dim) < 50: continue
-        if min(dim) / max(dim) < 0.95: continue
+    
+    # Находим координаты точки пересечения
+    x = ((x3 * y4 - y3 * x4) * (x1 - x2) - (x1 * y2 - y1 * x2) * (x3 - x4)) / ((y1 - y2) * (x3 - x4) - (y3 - y4) * (x1 - x2))
+    y = ((y1 - y2) * (x * (x1 - x2) - x1 * y2 + y1 * x2) - (y3 - y4) * (x * (x3 - x4) - x3 * y4 + y3 * x4)) / ((x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4))
+    
+    return x, y
 
-        x, y, w, h = cv2.boundingRect(cnt)
-        mask = imgBinary[y - margin:y + h + margin, x - margin:x + w + margin]
-        # rotation
-        M = cv2.getRotationMatrix2D((mask.shape[0] / 2, mask.shape[1] / 2), ang, 1)
-        mask = cv2.warpAffine(mask, M, (mask.shape[0], mask.shape[1]))
-        # clip
-        clip = [round((mask.shape[0] - dim[1]) / 2), round((mask.shape[1] - dim[0]) / 2)]
-        mask = mask[clip[0]:-clip[0], clip[1]:-clip[1]]
 
-        binArray = getMaskBinArray(mask)
-        if len(binArray) == 0: continue
-        return bin2Dec(binArray)
+def perpendicular_line(point_on_line, slope, distance=1):
+    def perpendicular_slope(slope):
+        if slope == 0:
+            return float('inf')  # Перпендикуляр к горизонтальной прямой - вертикальная прямая
+        elif slope == float('inf'):
+            return 0  # Перпендикуляр к вертикальной прямой - горизонтальная прямая
+        else:
+            return -1 / slope
 
-res = detectAruco(cv2.imread('thresholding/fullImage.png'))
-print(res)
+    x1, y1 = point_on_line
+    
+    # Находим угловой коэффициент перпендикулярной прямой
+    perp_slope = perpendicular_slope(slope)
+    
+    # Находим координаты двух точек на перпендикулярной прямой
+    x2_up = x1 + distance
+    y2_up = y1 + distance * perp_slope
+    x2_down = x1 - distance
+    y2_down = y1 - distance * perp_slope
+    
+    return (x2_up, y2_up), (x2_down, y2_down)
+
+def slope_between_points(p1, p2):
+    x1, y1 = p1
+    x2, y2 = p2
+    
+    # Проверяем, чтобы не делить на ноль
+    if x2 - x1 == 0:
+        return float('inf')  # Возвращаем бесконечность, если прямая вертикальная
+    
+    return (y2 - y1) / (x2 - x1)
+
+
+# Пример использования
+p1 = (36, 463)
+p2 = (48, 490)
+points = [(47, 429), (55, 451), (70, 473), (96, 493)]
+lp1 = points[1]
+lp2 = points[2]
+# Создаем пустое изображение
+img = np.zeros((512, 512, 3), dtype=np.uint8)
+
+# Рисуем ломаную
+for i in range(len(points) - 1):
+    cv2.line(img, points[i], points[i+1], (255, 255, 255), 2)
+
+# Рисуем линию p1-p2
+cv2.line(img, p1, p2, (0, 0, 255), 2)
+
+
+def findIntersectionAruco(p1, p2, lp1, lp2):
+    mid = ((p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2)
+    p1, p2 = perpendicular_line(mid, slope_between_points(p1, p2), 50)
+    p1, p2 = list(map(round, p1)), list(map(round, p2))
+    cv2.line(img, p1, p2, (255, 255, 0), 2)
+    cv2.line(img, lp1, lp2, (0, 255, 0), 2)
+    return intersection(p1, p2, lp1, lp2)
+
+
+point = findIntersectionAruco(p1, p2, lp1, lp2)
+print(point)
+
+
+# Отображаем точки пересечения на изображении
+cv2.circle(img, (int(point[0]), int(point[1])), 5, (0, 255, 0), -1)
+
+# Отображаем изображение
+cv2.imshow('Intersections', img)
+cv2.waitKey(0)
+cv2.destroyAllWindows()

@@ -13,12 +13,13 @@ class Line:
 
 
 class Point:
-    def __init__(self, id, pos, line=None, isCrossroad=False, isAruco=False, neighbours=[]):
+    def __init__(self, id, pos, line=None, isCrossroad=False, isAruco=False, arucoAngle=None, neighbours=[]):
         self.id = id
         self.pos = pos
         self.line = line
         self.isCrossroad = isCrossroad
         self.isAruco = isAruco
+        self.arucoAngle = arucoAngle
         self.isEnd = False
         if not neighbours:
             self.neighbours = []

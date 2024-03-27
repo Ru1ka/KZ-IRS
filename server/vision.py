@@ -231,7 +231,7 @@ def detectAruco(img, size=3, areaRange=(800, 1300), coefApprox=0.03, show=False)
             if numberAruco in ALL_ARUCO_KEYS: break
             arucoArray = np.rot90(arucoArray)
         else: continue
-        dictAruco[f'p_{numberAruco}'] = (centerContour, angleBetweenContourAndAbscissa)
+        dictAruco[f'p_{numberAruco}'] = (centerContour, angleBetweenContourAndAbscissa, contourVertexes)
         if show: cv2.putText(imgContours, str(numberAruco), contourVertexes[1], cv2.FONT_HERSHEY_COMPLEX, 1, (100, 0, 255), 2)
     if show:
         cv2.destroyWindow('Aruco')

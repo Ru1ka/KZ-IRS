@@ -86,6 +86,7 @@ def init_task_1(task):
     dictAruco = detectAruco()
     points, route = routeRefactor(route, dictAruco)
 
+
 def init(task):
     DEBUG = settings().DEBUG
 
@@ -142,12 +143,13 @@ def debugLocal():
     show.showLines(img, extendedRoadLines)
 
     # Сборка графа
-    graph = getGraph(extendedRoadLines, distCrossroads=20)
+    graph = getGraph(extendedRoadLines, distCrossroads=40)
     show.showGraph(img, graph)
 
     graph = refactorGraph(graph)  # Двухстороннее движение
     show.showGraph(img, graph)
-    # graph = addArucos(img, graph, dictAruco, route)
+    graph = addArucos(graph, dictAruco)
+    show.showGraph(img, graph)
     # graph = addPoints(img, graph, route)
 
     # path = getResultPositions(graph, robotPos)

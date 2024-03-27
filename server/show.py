@@ -16,3 +16,28 @@ def buildGraphShow(img, points, lines):
     showImage(imgLines)
 
 
+def showGraph(img, points):
+    imgLines = img.copy()
+    # рисуем граф
+    for point in points.values():
+        for neighbour in point.neighbours:
+            cv2.circle(imgLines, point.pos, 15, (161, 115, 72), 2)
+            cv2.line(imgLines, point.pos, neighbour.pos, (76, 235, 23), 2)
+
+    showImage(imgLines)
+
+
+def showLines(img, lines):
+    imgLines = img.copy()
+    colorA = (0, 0, 255)
+    colorB = (0, 100, 255)
+    isA = True
+    for line in lines:
+        for i in range(len(line) - 1):
+            if isA:
+                color = colorA
+            else:
+                color = colorB
+            isA = not isA
+            cv2.line(imgLines, line[i], line[i + 1], color, 2)
+    showImage(imgLines)

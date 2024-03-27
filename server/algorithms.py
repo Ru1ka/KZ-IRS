@@ -9,7 +9,7 @@ def getDistanceBetweenPoints(point1, point2):
 
 def getRoadLines(points):
     # кластеризация точек
-    ACCURATE = 1.2  # для baseDistance
+    ACCURATE = 1.4  # для baseDistance
 
     roadLines = []
     sortedPoints = sorted(points)
@@ -75,7 +75,7 @@ def getAngleBetweenLineAndAxis(line):
     return angles
 
 
-def getPosRightSideSegment(startPosLine, endPosLine, deviationLen=60):
+def getPosRightSideSegment(startPosLine, endPosLine, deviationLen=20):
     if startPosLine[0] < 20 or endPosLine[0] < 20:
         print(startPosLine, endPosLine)
     vectorAB = [(endPosLine[axis] - startPosLine[axis]) for axis in range(2)]

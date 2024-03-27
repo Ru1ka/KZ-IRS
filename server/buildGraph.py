@@ -290,6 +290,37 @@ def addArucos(points, arucos, mainPoints=[]):
 
     return points
 
+def addEmptyArUco(points, emptyArUco):
+    counter = 1000
+    pointsList = list(points.values())
+    for aruco in emptyArUco:
+        pointId = f"em_{counter}"
+        pointsList.sort(key=lambda p: getDistanceBetweenPoints(p.pos, aruco[0]))
+        closestPoint = pointsList[0]
+        p1, p2 = list(sorted(aruco[1], key=lambda x: getDistanceBetweenPoints(closestPoint.pos, x)))[:2]
+        slope = slope_between_points(p1, p2)
+        a, b = findIntersectionAruco(p1, p2, slope, distance=20)
+        newPointPos = min(a, b, key=lambda x: getDistanceBetweenPoints(x, closestPoint.pos))
+
+        neighbours = list(sorted(pointsList, key=lambda x: getDistanceBetweenPoints(x.pos, newPointPos)))[:2]
+        if neighbours[0] in neighbours[1].neighbours:
+            left = neighbours[1]
+            right = neighbours[0]
+        else:
+            left = neighbours[0]
+            right = neighbours[1]
+
+        arucoPoint = Point(pointId, aruco[0], isAruco=True, arucoAngle=aruco[1])
+        newPointPos = (round(newPointPos[0]), round(newPointPos[1]))
+        newPoint = Point(f"addedPoint_{counter}", newPointPos, neighbours=[right, arucoPoint])
+
+        points[newPoint.id] = newPoint
+        points[pointId] = arucoPoint
+
+        left.neighbours = [newPoint]
+        arucoPoint.neighbours = [newPoint]
+        counter += 1
+
 
 def addPoints(points, addPoints):
     pointsList = list(points.values())

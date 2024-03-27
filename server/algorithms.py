@@ -129,7 +129,7 @@ def getResultPositions(graph, robotPos, mainPoints):
         point = graph[point]
         path = findPathBFS(last, point)
         last = point
-        resultPositions += [p.pos for p in path[1:]]
+        resultPositions += [p for p in path[1:]]
     return resultPositions
 
 POINTS_COMB = [

@@ -7,7 +7,7 @@ from vision import *
 from fastapi import FastAPI
 
 from vision import detectAruco, getMarkupPositions, detectRobot
-from buildGraph import getGraph, refactorGraph, addArucos, addPoints
+from buildGraph import getGraph, refactorGraph, addArucos, addEmptyArUco
 from algorithms import getRoadLines, extendLines, getResultPositions, routeRefactor, getDirection
 import saveImg as svImg
 import show
@@ -150,9 +150,12 @@ def debugLocal():
     show.showGraph(img, graph)
     graph = addArucos(graph, dictAruco)
     show.showGraph(img, graph)
+    # emptyArUco = ...
+    # graph = addEmptyArUco(graph, emptyArUco)
+    # show.showGraph(img, graph)
     # graph = addPoints(img, graph, route)
 
-    # path = getResultPositions(graph, robotPos)
+    path = getResultPositions(graph, robotPos)
 
     # return path
 

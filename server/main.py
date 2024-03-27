@@ -11,10 +11,9 @@ from buildGraph import getGraph, refactorGraph
 from algorithms import getRoadLines, extendLines, getResultPositions, routeRefactor
 import saveImg as svimg
 
-app = FastAPI()
 
-# вывести текущую директорию
 const = ConstPlenty()
+app = FastAPI()
 
 ## Здесь должно работать ваше решение
 def solve():
@@ -64,6 +63,7 @@ def solve():
 
     cv2.imwrite(os.path.join(const.path.images, f'{cam1}.png'), cam1.read())
     cv2.imwrite(os.path.join(const.path.images, f'{cam2}.png'), cam2.read())
+    cv2.imwrite(os.path.join(const.path.images, 'fullImage.png'), fullImg)
 
     # cur = 0
     # path = init()

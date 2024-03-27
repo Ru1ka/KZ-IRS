@@ -48,10 +48,11 @@ def solve():
     print(task.getTask())
 
     robot = Robot('10.128.73.81', 5005)
-    robot.on()
+    #robot.on()
 
     cam1 = Camera(0, const.cam1.matrix, const.cam1.distortion)
     cam2 = Camera(1, const.cam2.matrix, const.cam2.distortion)
+    fullImg = getFullScene(cam1.read(), cam2.read())
 
     cv2.imwrite(os.path.join(const.path.images, f'{cam1}.png'), cam1.read())
     cv2.imwrite(os.path.join(const.path.images, f'{cam2}.png'), cam2.read())

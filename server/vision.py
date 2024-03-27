@@ -33,7 +33,7 @@ def getMarkupPositions():
     pass
 
 def detectRobot():
-    "-> (x, y)"
+    "-> central point, [(x, y), ...]"
     pass
 
 def getFullScene(leftImg, rightImg):

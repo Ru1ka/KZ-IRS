@@ -8,7 +8,7 @@ from fastapi import FastAPI
 
 from vision import detectAruco, getMarkupPositions, detectRobot
 from buildGraph import getGraph, refactorGraph, addArucos, addPoints
-from algorithms import getRoadLines, extendLines, getResultPositions, routeRefactor
+from algorithms import getRoadLines, extendLines, getResultPositions, routeRefactor, getDirection
 import saveImg as svimg
 
 
@@ -70,7 +70,11 @@ def solve():
 
     @app.get("/robot_ping")
     def robot_ping():
-        return {"position", detectRobot()}
+        pos, directionPoints = detectRobot()
+        return {
+            "position": pos, 
+            "direction": getDirection(directionPoints)
+        }
 
     task.stop()
 
@@ -88,7 +92,7 @@ def init(task, debug=True):
     # Получение точек от cv2
     contours, markupArray = getMarkupPositions()
     dictAruco = detectAruco()
-    robotPos = detectRobot()
+    robotPos, angle = detectRobot()
     if debug:
         svimg.markupPositions(img, contours, markupArray)
         svimg.dictAruco(img, dictAruco)

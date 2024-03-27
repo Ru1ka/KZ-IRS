@@ -151,7 +151,7 @@ def perpendicularUnitVector(v1, v2):
 
     return perpendicular_vector
 
-def direction(points):
+def getDirection(points):
     for i in POINTS_COMB:
         l1 = []
         l2 = []

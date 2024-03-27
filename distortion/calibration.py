@@ -54,7 +54,7 @@ def getUndistortedImage(img, mtx, dist):
     return dst
 
 def main():
-    folder = 'dataset/cam1'
+    folder = 'dataset/cam'
     calibImages = [(file, cv2.imread(f'{folder}/{file}')) for file in os.listdir(f'{folder}/')]
     print(len(calibImages))
     objectPoints, imgPoints = getObjAndImgPoints(calibImages, (height, width), lenCell, show=True)
@@ -63,7 +63,7 @@ def main():
     print(f'Mtx:\n{mtx}')
     print(f'Dist:\n{dist}')
 
-    img = cv2.imread(f'{folder}/5.png')
+    img = cv2.imread(f'{folder}/5.jpg')
     undistortedImage = getUndistortedImage(img, mtx, dist)
     cv2.imwrite('undistortedImage.jpg', undistortedImage)
 

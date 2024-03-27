@@ -183,34 +183,110 @@ def refactorGraph(points):
     return newPoints
 
 
-def addArucos(points, arucos, mainPoints):
-    acucoId2PointId = {}
+def perpendicular_line(point_on_line, slope, distance=1):
+    # Calculate the slope of the perpendicular line
+    if slope == 0:  # If the slope of the original line is 0, perpendicular slope is undefined (infinity)
+        perpendicular_slope = float('inf')
+    else:
+        perpendicular_slope = -1 / slope  # Slope of perpendicular line is negative reciprocal
+
+    # Calculate coordinates of the new points
+    x, y = point_on_line
+    # Move the new points perpendicular to the original line
+    if perpendicular_slope == float('inf'):
+        new_point1 = (x, y + distance)
+        new_point2 = (x, y - distance)
+    else:
+        delta_x = distance / ((1 + perpendicular_slope ** 2) ** 0.5)
+        delta_y = perpendicular_slope * delta_x
+        new_point1 = (x + delta_x, y + delta_y)
+        new_point2 = (x - delta_x, y - delta_y)
+
+    # Return the equation of the perpendicular line in point-slope form (y - y1 = m(x - x1))
+    return new_point1, new_point2
+
+
+def slope_between_points(p1, p2):
+    x1, y1 = p1
+    x2, y2 = p2
+    if x2 - x1 == 0:  # Avoid division by zero for vertical lines
+        return float('inf')
+    else:
+        return (y2 - y1) / (x2 - x1)
+
+
+def findIntersectionAruco(p1, p2, slope, distance=10):
+    mid = ((p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2)
+    return perpendicular_line(mid, slope, distance=distance)
+
+
+def addArucos(points, arucos, mainPoints=[]):
+    arUcoId2PointId = {}
     for point in mainPoints:
         if "marker_id" in point:
-            acucoId2PointId[f'p_{point["marker_id"]}'] = point["name"]
+            arUcoId2PointId[f'p_{point["marker_id"]}'] = point["name"]
 
+    counter = 0
     pointsList = list(points.values())
     for arucoId, aruco in arucos.items():
-        pointsList.sort(key=lambda p: getDistanceBetweenPoints(p.pos, aruco))
-        # Берем 3 точки, сортируем по ходу движения
-        closest = pointsList[:3]
-        first = closest
-        for i in closest:
-            for neighbour in i.neighbours:
-                if neighbour in closest:
-                    first.remove(neighbour)
-        first = first[0]
-        closest2 = [first]
-        for i in range(2):
-            closest2.append(closest2[-1].neighbours[0])
-        closest = closest2
-        if arucoId in acucoId2PointId:
-            pointId = acucoId2PointId[arucoId]
+        pointsList.sort(key=lambda p: getDistanceBetweenPoints(p.pos, aruco[0]))
+
+        if arucoId in arUcoId2PointId:
+            pointId = arUcoId2PointId[arucoId]
         else:
-            pointId = f'p_{arucoId}'
-        arucoPoint = Point(pointId, aruco, isAruco=True, neighbours=[closest[2]])
+            pointId = arucoId
+
+        # Строим перпендикуляр от 
+        closestPoint = pointsList[0]
+        p1, p2 = list(sorted(aruco[2], key=lambda x: getDistanceBetweenPoints(closestPoint.pos, x)))[:2]
+        slope = slope_between_points(p1, p2)
+        a, b = findIntersectionAruco(p1, p2, slope, distance=20)
+        newPointPos = min(a, b, key=lambda x: getDistanceBetweenPoints(x, closestPoint.pos))
+
+        neighbours = list(sorted(pointsList, key=lambda x: getDistanceBetweenPoints(x.pos, newPointPos)))[:2]
+        if neighbours[0] in neighbours[1].neighbours:
+            left = neighbours[1]
+            right = neighbours[0]
+        else:
+            left = neighbours[0]
+            right = neighbours[1]
+
+        arucoPoint = Point(pointId, aruco[0], isAruco=True, arucoAngle=aruco[1])
+        newPointPos = (round(newPointPos[0]), round(newPointPos[1]))
+        newPoint = Point(f"addedPoint_{counter}", newPointPos, neighbours=[right, arucoPoint])
+
+        points[newPoint.id] = newPoint
         points[pointId] = arucoPoint
-        closest[0].addNeighbour(arucoPoint)
+
+        left.neighbours = [newPoint]
+        arucoPoint.neighbours = [newPoint]
+        counter += 1
+        # print(newPoint.neighbours)
+        # print(arucoPoint.neighbours)
+        # print(arucoPoint.id)
+        # # Берем ближайшую точку:
+        # closestPoint = pointsList[0]
+        # arucoPoint = Point(pointId, aruco[0], isAruco=True, arucoAngle=aruco[1], neighbours=[closestPoint])
+        # closestPoint.addNeighbour(arucoPoint)
+        # points[pointId] = arucoPoint
+
+
+        # # Берем 3 точки, сортируем по ходу движения
+        # closest = pointsList[:3]
+        # first = closest
+        # for i in closest:
+        #     for neighbour in i.neighbours:
+        #         if neighbour in closest:
+        #             first.remove(neighbour)
+        # first = first[0]
+        # closest2 = [first]
+        # for i in range(2):
+        #     closest2.append(closest2[-1].neighbours[0])
+        # closest = closest2
+
+        # arucoPoint = Point(pointId, aruco[0], isAruco=True, arucoAngle=aruco[1], neighbours=[closest[2]])
+        # points[pointId] = arucoPoint
+        # closest[0].addNeighbour(arucoPoint)
 
     return points
 

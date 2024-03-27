@@ -7,7 +7,7 @@ from vision import *
 from fastapi import FastAPI
 
 from vision import detectAruco, getMarkupPositions, detectRobot
-from buildGraph import getGraph, refactorGraph
+from buildGraph import getGraph, refactorGraph, addArucos, addPoints
 from algorithms import getRoadLines, extendLines, getResultPositions, routeRefactor
 import saveImg as svimg
 
@@ -74,6 +74,11 @@ def solve():
     task.stop()
 
 
+def init_task_1(task):
+    route = ...
+    dictAruco = detectAruco()
+    points, route = routeRefactor(route, dictAruco)
+
 def init(task, debug=True):
     img = ...
 
@@ -87,10 +92,6 @@ def init(task, debug=True):
         svimg.markupPositions(img, contours, markupArray)
         svimg.dictAruco(img, dictAruco)
         svimg.robotPos(img, detectRobot)
-    
-    # Сопоставление route c ArUco
-    route = routeRefactor(route, dictAruco)
-
         
     # Сборка и продление линий дороги
     roadLines = getRoadLines(markupArray)
@@ -106,8 +107,8 @@ def init(task, debug=True):
     graph = refactorGraph(graph)  # Двухстороннее движение
     if debug:
         svimg.saveGraph(img, graph)
-    # graph = addArucos(img, graph, dictAruco, mainPoints)  # Связь графом с ArUco метками
-    # graph = addPoints(img, graph, mainPoints)  # Связь графа c другими точками (веротяно не нужно)
+    graph = addArucos(img, graph, dictAruco, route)
+    graph = addPoints(img, graph, route)
 
     path = getResultPositions(graph, robotPos)
     if debug:

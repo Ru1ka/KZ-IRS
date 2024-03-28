@@ -3,6 +3,7 @@ import cv2
 import numpy as np
 import math
 from funcs import *
+#from docker-old.solution.funcs import *
 
 ALL_ARUCO_KEYS = [1, 2, 3, 5, 6, 7, 10, 11, 12, 13, 14, 15, 17, 18, 19, 21, 22, 23, 26, 27, 28, 29, 30, 31, 33, 35, 37,
                   39, 41, 42, 43, 44, 45, 46, 47, 49, 51, 53, 55, 57, 58, 59, 60, 61, 62, 63, 69, 70, 71, 76, 77, 78,
@@ -143,23 +144,37 @@ def getMarkupPositions(img, squareRange=(10, 115), adaptive=False, custom=True, 
 
 def getCenterRobot(img):
     imgHSV = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-    imgBinary = cv2.inRange(imgHSV, (86, 169, 29), (128, 255, 82))
+    HSVMin = (18, 103, 34)
+    HSVMax = (151, 216, 108)
+    imgBinary = cv2.inRange(imgHSV, HSVMin, HSVMax)
+    # showImage(imgBinary)
     contours, _ = cv2.findContours(imgBinary, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+    contours = sorted(contours, key=cv2.contourArea, reverse=True)
+    if not contours: return None
     centerRobot = findContourCenter(contours[0])
     return centerRobot
 
 def getOrientationPoints(img):
     imgHSV = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-    imgBinary1 = cv2.inRange(imgHSV, (7, 162, 55), (81, 255, 149))
-    imgBinary2 = cv2.inRange(imgHSV, (79, 55, 87), (208, 255, 211))
+    HSVMin1 = (24, 32, 68)
+    HSVMax1 = (143, 219, 209)
+    imgBinary1 = cv2.inRange(imgHSV, HSVMin1, HSVMax1)
+    HSVMin2 = (126, 67, 61)
+    HSVMax2 = (221, 143, 136)
+    imgBinary2 = cv2.inRange(imgHSV, HSVMin2, HSVMax2)
     imgBinary = cv2.bitwise_or(imgBinary1, imgBinary2)
     contours, _ = cv2.findContours(imgBinary, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+    if not contours: return None
+    contours = sorted(contours, key=cv2.contourArea, reverse=True)
     directionPoints = [findContourCenter(cnt) for cnt in contours]
+    directionPoints = directionPoints[:4]
     return directionPoints
 
 def detectRobot(img, show=False):
     centerRobot = getCenterRobot(img)
+    if not centerRobot: return None, None
     orientationPoints = getOrientationPoints(img)
+    if not orientationPoints: return centerRobot, None
     nearestPoints = getNearestPoints(orientationPoints)
     directionPoint = ((nearestPoints[0][0] + nearestPoints[1][0]) // 2,
                       (nearestPoints[0][1] + nearestPoints[1][1]) // 2)

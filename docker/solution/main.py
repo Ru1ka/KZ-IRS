@@ -1,100 +1,129 @@
 import socket
 import os
-from const import ConstPlenty
-from vision import *
-from aruco import findArucoMarkers, detectAruco
-from fastapi import FastAPI
-import cv2
 import time
+import math
+
+from const import ConstPlenty
+from aruco import findArucoMarkers, detectAruco
+from vision import detectRobot
+from funcs import getDistanceBetweenPoints, getErrorByPoints, angleToPoint
+import numpy as np
+import cv2
 
 from nto.final import Task
 
 const = ConstPlenty()
 task = Task()
 
-class Camera:
-    def __init__(self, index, matrix, distortion):
-        self.index = index
-        self.matrix = matrix
-        self.distortion = distortion
-        self.cap = cv2.VideoCapture(2)
-        self.cap.set(cv2.CAP_PROP_BRIGHTNESS, 20)
-        self.cap.set(cv2.CAP_PROP_FOCUS, 0)
-        self.cap.set(cv2.CAP_PROP_SATURATION, 0)
-
-    def read(self):
-        success, rawImg = self.cap.read()
-        return rawImg if success else None
-
-    def __str__(self):
-        return f'Camera_{self.index}'
-
-
 class Robot:
     def __init__(self, ip, port):
         self.ip = ip
         self.port = port
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.stop()
 
     def send(self, message):
         self.sock.sendto(message, (self.ip, self.port))
 
-    def sendPath(self, path):
-        strPath = ';'.join([','.join(list(map(str, pos))) for pos in path])+';'
-        print(strPath)
+    def turnRight(self, speed):
+        strPath = ':'.join(['1', str(speed)])
         self.send(strPath.encode('utf-8'))
 
+    def turnLeft(self, speed):
+        strPath = ':'.join(['0', str(speed)])
+        self.send(strPath.encode('utf-8'))
+
+    def stop(self):
+        for dir in '01':
+            strPath = ':'.join([dir, '0'])
+            self.send(strPath.encode('utf-8'))
+
+
+class Camera:
+    def __init__(self, index):
+        self.cap = cv2.VideoCapture(index)
+        self.cap.set(cv2.CAP_PROP_BRIGHTNESS, 20)
+        self.cap.set(cv2.CAP_PROP_FOCUS, 0)
+        self.cap.set(cv2.CAP_PROP_SATURATION, 0)
+
+    def read(self):
+        success, img = self.cap.read()
+        return img if success else None
+
+    def release(self):
+        self.cap.release()
+
 robot = Robot('10.128.73.116', 5005)
-cam = Camera(0, const.cam.matrix, const.cam.distortion)
+cam = Camera(index=2)
 
-## Здесь должно работать ваше решение
-def solve():
-    task.start()
-    saveImage()
-    path = getResultPath(eval(task.getTask()))
-    robot.sendPath(path)
-    runWebhook()
-    task.stop()
+def saveImage(img):
+    cv2.imwrite(os.path.join(const.path.images, f'Camera.png'), img)
 
-def saveImage():
-    cv2.imwrite(os.path.join(const.path.images, f'{cam}.png'), cam.read())
+def showImage(img, winName='ImageScene'):
+    cv2.imshow(winName, img)
+    if cv2.waitKey(1) == 27: raise ValueError('Exit by user')
 
-def getResultPath(route):
-    imgScene = cam.read()
-    markerCorners, markerIds = findArucoMarkers(imgScene, show=False)
-    arucoPositions = detectAruco(imgScene, markerCorners, markerIds)
-    print(len(arucoPositions), arucoPositions)
+def angleRegulator(error, maxSpeed, kp=1):
+    if abs(error) < math.radians(20): speed = maxSpeed
+    else: speed = 0
+    u = error * kp
+    print(speed + u, speed - u)
+    robot.turnRight(speed + u)
+    robot.turnLeft(speed - u)
+
+def rotate360(speed, timer=16, show=False):
+    lastTime = time.time()
+    robot.turnRight(speed)
+    robot.turnLeft(-speed)
+    while lastTime + timer > time.time():
+        if show:
+            imgScene = cam.read()
+            showImage(imgScene)
+    robot.stop()
+
+def getResultPath(img, route, show=False):
+    markerCorners, markerIds = findArucoMarkers(img, show=show)
+    arucoPositions = detectAruco(img, markerCorners, markerIds)
     resultPath = []
     route = [{'marker_id': 2}, {'marker_id': 55}, {'marker_id': 205}]
     for aruco in route:
         markerId = aruco['marker_id']
         if f'p_{markerId}' in arucoPositions:
             resultPath.append(arucoPositions[f'p_{markerId}'])
-    print(resultPath)
     return resultPath
 
-app = FastAPI()
+def driveToArucoMarkers(path, speed, show=False):
+    for arucoMarker in path:
+        imgScene = cam.read()
+        posAruco, angleAruco = arucoMarker
+        centerRobot, directionPoint = detectRobot(imgScene)
+        while getDistanceBetweenPoints(centerRobot, posAruco) < 10:
+            imgScene = cam.read()
+            centerRobot, directionPoint = detectRobot(imgScene)
+            error = getErrorByPoints(directionPoint, posAruco, centerRobot)
+            angleRegulator(error, speed)
+            if show: showImage(imgScene)
+        robot.stop()
+        directionArucoPoint = angleToPoint(posAruco, angleAruco)
+        while True:
+            imgScene = cam.read()
+            centerRobot, directionPoint = detectRobot(imgScene)
+            error = getErrorByPoints(directionPoint, directionArucoPoint, centerRobot)
+            angleRegulator(error, 0)
+            if show: showImage(imgScene)
+            if abs(error) < math.radians(10): break
+        robot.stop()
+        rotate360(speed, show=show)
 
-@app.get("/robot/pos")
-def robotPos():
+def solve():
+    task.start()
+    route = task.getTask()
     imgScene = cam.read()
-    centerRobot, directionPoint = detectRobot(imgScene)
-    positions = '0,0,0;'
-    positions += ','.join(list(map(str, centerRobot))+['0'])+';'
-    positions += ','.join(list(map(str, directionPoint))+['0'])+';'
-    return positions
-
-"""p1 = '9,4,1488;10,4,1488;'
-p2 = '9,9,1488;9,10,1488;'
-p3 = '4,9,1488;3,9,1488;'"""
-
-def runWebhook():
-    import uvicorn
-    uvicorn.run("main:app",
-                reload=False,
-                host="0.0.0.0",
-                port=5400)
-
+    saveImage(imgScene)
+    resultPath = getResultPath(imgScene, route, show=True)
+    print(resultPath)
+    driveToArucoMarkers(resultPath, speed=120, show=True)
+    task.stop()
 
 if __name__ == '__main__':
     solve()

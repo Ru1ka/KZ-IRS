@@ -2,6 +2,7 @@ import socket
 import os
 from const import ConstPlenty
 from vision import *
+from aruco import findArucoMarkers, detectAruco
 from fastapi import FastAPI
 import cv2
 
@@ -15,11 +16,14 @@ class Camera:
         self.index = index
         self.matrix = matrix
         self.distortion = distortion
+        self.cap = cv2.VideoCapture(0)
+        self.cap.set(cv2.CAP_PROP_BRIGHTNESS, 20)
+        self.cap.set(cv2.CAP_PROP_FOCUS, 0)
+        self.cap.set(cv2.CAP_PROP_SATURATION, 0)
 
     def read(self):
-        sceneImages = task.getTaskScene()
-        rawImg = sceneImages[self.index]
-        return rawImg
+        success, rawImg = self.cap.read()
+        return rawImg if success else None
 
     def __str__(self):
         return f'Camera_{self.index}'
@@ -35,10 +39,10 @@ class Robot:
         self.sock.sendto(message, (self.ip, self.port))
 
     def sendPath(self, path):
-        strPath = ';'.join([','.join(list(map(str, pos))) for pos in path])
+        strPath = ';'.join([','.join(list(map(str, pos))) for pos in path])+';'
         self.send(strPath.encode('utf-8'))
 
-robot = Robot('10.128.73.81', 5005)
+robot = Robot('10.128.73.116', 5005)
 cam = Camera(0, const.cam.matrix, const.cam.distortion)
 
 ## Здесь должно работать ваше решение
@@ -46,7 +50,7 @@ def solve():
     task.start()
     saveImage()
     path = getResultPath(eval(task.getTask()))
-    robot.sendPath(path)
+    #robot.sendPath(path)
     task.stop()
     runWebhook()
 
@@ -55,8 +59,10 @@ def saveImage():
 
 def getResultPath(route):
     imgScene = cam.read()
-    arucoPositions = detectAruco(imgScene)
+    markerCorners, markerIds = findArucoMarkers(imgScene, show=True)
+    arucoPositions = detectAruco(imgScene, markerCorners, markerIds)
     resultPath = []
+    route = [{'marker_id': 2}, {'marker_id': 55}, {'marker_id': 205}]
     for aruco in route:
         markerId = aruco['marker_id']
         if f'p_{markerId}' in arucoPositions:
@@ -67,10 +73,17 @@ def getResultPath(route):
 app = FastAPI()
 
 @app.get("/robot/pos")
-def robotPing():
+def robotPos():
     imgScene = cam.read()
     centerRobot, directionPoint = detectRobot(imgScene)
-    return {'centerRobot': centerRobot, 'directionPoint': directionPoint}
+    positions = '0,0,0;'
+    positions += ','.join(list(map(str, centerRobot))+['0'])+';'
+    positions += ','.join(list(map(str, directionPoint))+['0'])+';'
+    return positions
+
+"""p1 = '9,4,1488;10,4,1488;'
+p2 = '9,9,1488;9,10,1488;'
+p3 = '4,9,1488;3,9,1488;'"""
 
 def runWebhook():
     import uvicorn

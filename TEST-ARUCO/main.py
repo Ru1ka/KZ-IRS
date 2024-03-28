@@ -66,15 +66,12 @@ def rotateMatrix(matrix):
     # Получаем количество строк и столбцов в матрице
     num_rows = len(matrix)
     num_cols = len(matrix[0])
-
     # Создаем новую матрицу, в которую будем записывать повернутую матрицу
     rotated_matrix = [[0] * num_rows for _ in range(num_cols)]
-
     # Перебираем элементы исходной матрицы и записываем их в новую матрицу, повернутую на 90 градусов
     for i in range(num_rows):
         for j in range(num_cols):
             rotated_matrix[j][num_rows - 1 - i] = matrix[i][j]
-
     return rotated_matrix
 
 

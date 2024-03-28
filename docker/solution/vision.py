@@ -1,9 +1,8 @@
 import traceback
-
 import cv2
 import numpy as np
 import math
-from functools import lru_cache
+from funcs import *
 
 ALL_ARUCO_KEYS = [1, 2, 3, 5, 6, 7, 10, 11, 12, 13, 14, 15, 17, 18, 19, 21, 22, 23, 26, 27, 28, 29, 30, 31, 33, 35, 37,
                   39, 41, 42, 43, 44, 45, 46, 47, 49, 51, 53, 55, 57, 58, 59, 60, 61, 62, 63, 69, 70, 71, 76, 77, 78,
@@ -142,110 +141,6 @@ def getMarkupPositions(img, squareRange=(10, 115), adaptive=False, custom=True, 
         showImage(imgContours)
     return markupArray
 
-@lru_cache(None)
-def getDistanceBetweenPoints(point1, point2):
-    return math.hypot(abs(point1[0] - point2[0]), abs(point1[1] - point2[1]))
-
-
-def minDistanceBetweenLines(line1, line2):
-    return min([getDistanceBetweenPoints(point1, point2) for point1 in line1 for point2 in line2])
-
-def getPointOnSameLineOnSquare(vertexes, minDist, maxDist):
-    limitDist = minDist + (minDist + maxDist) // 2
-    for i, pos1 in enumerate(vertexes[:-1]):
-        for j, pos2 in enumerate(vertexes[i + 1:]):
-            if math.hypot(abs(pos1[0] - pos2[0]), abs(pos1[1] - pos2[1])) < limitDist:
-                return pos1, pos2
-
-def getAngleBetweenLines(line1, line2):
-    startPosLine1, endPosLine1 = line1
-    startPosLine2, endPosLine2 = line2
-    vector1 = [(endPosLine1[axis] - startPosLine1[axis]) for axis in range(2)]
-    vector2 = [(endPosLine2[axis] - startPosLine2[axis]) for axis in range(2)]
-    scalarProduct = np.dot(vector1, vector2)
-    lengthVector1 = math.hypot(abs(vector1[0]), abs(vector1[1]))
-    lengthVector2 = math.hypot(abs(vector2[0]), abs(vector2[1]))
-    lengthsProduct = lengthVector1 * lengthVector2
-    if lengthsProduct == 0: return math.pi
-    angle = math.acos(scalarProduct / lengthsProduct)
-    return angle
-
-def arucoThresholdImage(imgGray, show=False):
-    _, imgBinary1 = cv2.threshold(imgGray[:100], 65, 255, cv2.THRESH_BINARY)
-    _, imgBinary2 = cv2.threshold(imgGray[100:200], 85, 255, cv2.THRESH_BINARY)
-    _, imgBinary3 = cv2.threshold(imgGray[200:300], 70, 255, cv2.THRESH_BINARY)
-    _, imgBinary4 = cv2.threshold(imgGray[300:400], 55, 255, cv2.THRESH_BINARY)
-    _, imgBinary5 = cv2.threshold(imgGray[400:], 75, 255, cv2.THRESH_BINARY)
-    if show:
-        showImage(imgBinary1)
-        showImage(imgBinary2)
-        showImage(imgBinary3)
-        showImage(imgBinary4)
-        showImage(imgBinary5)
-    imgBinary = np.concatenate((imgBinary1, imgBinary2, imgBinary3, imgBinary4, imgBinary5), axis=0)
-    if show: showImage(imgBinary)
-    return imgBinary
-
-def detectAruco(img, size=3, areaRange=(600, 2000), coefApprox=0.03, show=False):
-    imgGray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    imgBinary = arucoThresholdImage(imgGray, show=show)
-    if show: showImage(imgBinary)
-    contours, _ = cv2.findContours(imgBinary, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
-    dictAruco = {}
-
-
-    for cnt in contours:
-        try:
-
-            if show:
-                imgShow = img.copy()
-                showImage(imgShow)
-            epsilon = coefApprox * cv2.arcLength(cnt, True)
-            approx = cv2.approxPolyDP(cnt, epsilon, True)
-            contourVertexes = [(pos[0][0], pos[0][1]) for pos in approx]
-            if show:
-                [cv2.circle(imgShow, pos, 3, (0, 0, 255), -1) for pos in contourVertexes]
-                showImage(imgShow)
-            centerContour = (round(sum([pos[0] for pos in contourVertexes]) / 4),
-                             round(sum([pos[1] for pos in contourVertexes]) / 4))
-            if show:
-                cv2.circle(imgShow, centerContour, 3, (255, 0, 0), -1)
-                showImage(imgShow)
-            allDistBetweenPoints = [round(math.hypot(abs(pos1[0] - pos2[0]), abs(pos1[1] - pos2[1])))
-                                    for i, pos1 in enumerate(contourVertexes[:-1])
-                                    for j, pos2 in enumerate(contourVertexes[i + 1:])]
-            widthContour, heightContour = sorted(allDistBetweenPoints)[:2]
-            pointContour1, pointContour2 = getPointOnSameLineOnSquare(contourVertexes, min(allDistBetweenPoints), max(allDistBetweenPoints))
-            angleBetweenContourAndAbscissa = getAngleBetweenLines((pointContour2, pointContour1), (pointContour1, (10, pointContour1[1])))
-            imgAruco = rotateImageByPoint(img, centerContour, angleBetweenContourAndAbscissa, widthContour, heightContour)
-            imgAruco = cv2.cvtColor(imgAruco, cv2.COLOR_BGR2GRAY)
-            shapeImgAruco = imgAruco.shape[:2]
-            sizeOneCell = (shapeImgAruco[1] / (size + 2), shapeImgAruco[0] / (size + 2))
-            arucoArray = np.zeros((size, size), dtype=np.uint8)
-            for i in range(size):
-                for j in range(size):
-                    basePosX, basePosY = sizeOneCell[0] * 1.5, sizeOneCell[1] * 1.5
-                    posX, posY = round(basePosX + sizeOneCell[0] * j), round(basePosY + sizeOneCell[1] * i)
-                    valueCell = imgAruco[posY, posX]
-                    arucoArray[i, j] = valueCell > 100
-                    #if show: cv2.circle(imgAruco, (posX, posY), 1, (100, 100, 100), 2)
-            #if show: showImage(imgAruco)
-            for i in range(4):
-                cpArucoArray = arucoArray.copy()
-                cpArucoArray.resize(size ** 2)
-                numberAruco = int(''.join(list(map(str, cpArucoArray))), 2)
-                if numberAruco in ALL_ARUCO_KEYS: break
-                arucoArray = np.rot90(arucoArray)
-            else: continue
-            dictAruco[f'p_{numberAruco}'] = (centerContour, angleBetweenContourAndAbscissa)
-            if show: cv2.putText(imgContours, str(numberAruco), contourVertexes[1], cv2.FONT_HERSHEY_COMPLEX, 1, (100, 0, 255), 2)
-        except: traceback.print_exc()
-    if show:
-        cv2.destroyWindow('Aruco')
-        cv2.drawContours(imgContours, arucoContours, -1, (0, 0, 255), 1)
-        showImage(imgContours)
-    return dictAruco
-
 def getCenterRobot(img):
     imgHSV = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     imgBinary = cv2.inRange(imgHSV, (86, 169, 29), (128, 255, 82))
@@ -261,14 +156,6 @@ def getOrientationPoints(img):
     contours, _ = cv2.findContours(imgBinary, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
     directionPoints = [findContourCenter(cnt) for cnt in contours]
     return directionPoints
-
-def getNearestPoints(points):
-    distances = []
-    for i, pnt1 in enumerate(points):
-        for j, pnt2 in enumerate(points[i+1:], start=i+1):
-            distances.append((getDistanceBetweenPoints(pnt1, pnt2), pnt1, pnt2))
-    nearestPoints = sorted(distances, key=lambda x: x[0])[0][1:]
-    return nearestPoints
 
 def detectRobot(img, show=False):
     centerRobot = getCenterRobot(img)

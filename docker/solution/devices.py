@@ -1,4 +1,41 @@
+import socket
 import cv2
+import math
+
+class Robot:
+    def __init__(self, ip, port):
+        self.ip = ip
+        self.port = port
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.stop()
+        self.resetRegulator()
+
+    def send(self, message):
+        self.sock.sendto(message, (self.ip, self.port))
+
+    def resetRegulator(self):
+        self.oldError = 0
+
+    def angleRegulator(self, error, maxSpeed, angleLimit=8, kp=4, kd=10):
+        if abs(error) < math.radians(angleLimit): speed = maxSpeed
+        else: speed = 0
+        u = error * kp + (error - self.oldError) * kd
+        self.oldError = error
+        self.turnRight(speed + u)
+        self.turnLeft(speed - u)
+
+    def turnRight(self, speed):
+        command = f'0:{speed}'
+        self.send(command.encode('utf-8'))
+
+    def turnLeft(self, speed):
+        command = f'1:{speed}'
+        self.send(command.encode('utf-8'))
+
+    def stop(self):
+        for dir in range(2):
+            command = f'{dir}:0'
+            self.send(command.encode('utf-8'))
 
 class Camera:
     def __init__(self, index):
@@ -32,21 +69,3 @@ class Camera:
     def release(self):
         self.setDefaultSettings()
         self.cap.release()
-
-def main():
-    cam = Camera(0)
-    cam.setDefaultSettings()
-    import time
-    lastTime = time.time() + 5
-    flag = True
-    while True:
-        if lastTime < time.time() and flag:
-            cam.setArucoSettings()
-            flag = False
-        img = cam.read()
-        cv2.imshow('Image', img)
-        if cv2.waitKey(1) == 27: break
-    cam.release()
-
-if __name__ == '__main__':
-    main()

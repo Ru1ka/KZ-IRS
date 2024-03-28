@@ -189,9 +189,9 @@ def debugLocal():
     # Сборка графа
     graph = getGraph(extendedRoadLines, distCrossroads=40)
     show.showGraph(img, graph)
-
+    
     graph = refactorGraph(graph)  # Двухстороннее движение
-    graph = deletePoints(graph, 275, 300)
+    graph = deletePoints(graph, 270, 300)
     show.showGraph(img, graph)
     graph = addArucos(graph, dictAruco)
     show.showGraph(img, graph)

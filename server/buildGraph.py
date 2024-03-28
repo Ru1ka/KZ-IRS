@@ -199,7 +199,6 @@ def perpendicular_line(point_on_line, slope, distance=1):
     else:
         delta_x = distance / ((1 + perpendicular_slope ** 2) ** 0.5)
         delta_y = perpendicular_slope * delta_x
-        print(delta_x, delta_y)
         new_point1 = (x + delta_x, y + delta_y)
         new_point2 = (x - delta_x, y - delta_y)
 
@@ -218,7 +217,6 @@ def slope_between_points(p1, p2):
 
 def findIntersectionAruco(p1, p2, slope, distance=10):
     mid = ((p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2)
-    print(mid)
     return perpendicular_line(mid, slope, distance=distance)
 
 
@@ -332,13 +330,33 @@ def addEmptyArUco(points, emptyArUco):
 
 def deletePoints(points, x1, x2):
     res = {}
+    deleted = []
     for key, val in points.items():
         if not x1 < val.pos[0] < x2:
             res[key] = val
+        else:
+            deleted += [val]
     for key, val in res.items():
-        for n in val.neighbours:
-            if n.id not in res:
-                val.neighbours = n.neighbours
+        new_neigh = []
+        visited = []
+        for neigh in val.neighbours:
+            if neigh in deleted:
+                queue = [neigh]
+                while queue:
+                    cur = queue.pop()
+                    new_neigh += [cur]
+                    if cur in deleted:
+                        for abc in cur.neighbours:
+                            if abc not in visited:
+                                queue += [abc]
+                                visited += [abc]
+        val.neighbours += new_neigh
+
+    # listPoints = list(res.values())
+    # for key, val in res.items():
+    #     for i in val.neighbours:
+    #         pass
+
     return res
 
 

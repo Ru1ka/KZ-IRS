@@ -106,15 +106,16 @@ def detectAruco(img, threshold, size=3, show=False):
         for cnr, id in zip(markerCorners, markerIds):
             pos = list(map(int, list(cnr[0][0])))
             cv2.putText(imgShow, str(id), pos, cv2.FONT_HERSHEY_COMPLEX, 1, (0, 0, 255), 2)
-        cv2.imshow('Image', imgShow)
+        while cv2.waitKey(1) != 27: cv2.imshow("ArUco Detection", imgShow)
+        while cv2.waitKey(1) != 27: cv2.imshow("ArUco Detection2", gray)
     result = {}
     for cnr, id in zip(markerCorners, markerIds):
         corners = np.array(list(map(np.array, cnr[0])))
         imgWrapped = fourPointTransform(img, corners)
         imgWGray = cv2.cvtColor(imgWrapped, cv2.COLOR_BGR2GRAY)
         matrix = getMatrixFromAruco(imgWGray, threshold, size)
-        center_x = sum([i[0] for i in corners]) / 4
-        center_y = sum([i[1] for i in corners]) / 4
+        center_x = round(sum([i[0] for i in corners]) / 4)
+        center_y = round(sum([i[1] for i in corners]) / 4)
         a, b = list(sorted(corners, key=lambda x: x[1]))[:2]
         if b[0] < a[0]:
             c = [a[0] + 5, a[1]]
@@ -122,7 +123,7 @@ def detectAruco(img, threshold, size=3, show=False):
         else:
             c = [a[0] - 5, a[1]]
             angle = -degrees(getAngleBetweenLines([b, a], [a, c]))
-            
+        
         corners.sort()
         n = 0
         while True:
@@ -136,8 +137,7 @@ def detectAruco(img, threshold, size=3, show=False):
                 angle += n * 90
                 if angle < 0:
                     angle += 360
-                print(angle)
-                result[f"p_{id}"] = (center_x, center_y, radians(angle))
+                result[f"p_{id}"] = ((center_x, center_y), [tuple(_) for _ in corners.tolist()], radians(angle))
                 break
             else:
                 n += 1
@@ -148,11 +148,6 @@ def detectAruco(img, threshold, size=3, show=False):
         # print(angle)
         # print(markerId)
         # print("___")
-
-        if show:
-            cv2.imshow('Aruco', imgWrapped)
-    if show:
-        cv2.waitKey(1)
     
     return result
 
@@ -207,13 +202,3 @@ def fourPointTransform(image, corners):
     M = cv2.getPerspectiveTransform(rect, dst)
     imgWraped = cv2.warpPerspective(image, M, (maxWidth, maxHeight))
     return imgWraped
-
-cap = cv2.VideoCapture(0)
-while True:
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        cv2.destroyAllWindows()
-        break
-    
-    success, img = cap.read()
-    img = cv2.flip(img, 1)
-    detectAruco(img, 150, show=True)

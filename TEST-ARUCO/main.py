@@ -152,6 +152,8 @@ def findArucoMarkers(img, threshold, size=3, show=False):
             cv2.imshow('Aruco', imgWrapped)
     if show:
         cv2.waitKey(1)
+    
+    return result
 
 
 def getMatrixFromAruco(imgGray, threshold, sizeAruco, show=False):

@@ -2,7 +2,7 @@ import cv2
 from cv2 import aruco
 import numpy as np
 # from ..server.vision import showImage
-from math import hypot, atan2, degrees
+from math import hypot, atan2, degrees, radians
 import math
 
 ALL_ARUCO_KEYS = [1, 2, 3, 5, 6, 7, 10, 11, 12, 13, 14, 15, 17, 18, 19, 21, 22, 23, 26, 27, 28, 29, 30, 31, 33, 35, 37,
@@ -136,7 +136,8 @@ def findArucoMarkers(img, threshold, size=3, show=False):
                 angle += n * 90
                 if angle < 0:
                     angle += 360
-                result[f"p_{id}"] = (center_x, center_y, angle)
+                print(angle)
+                result[f"p_{id}"] = (center_x, center_y, radians(angle))
                 break
             else:
                 n += 1
@@ -154,6 +155,15 @@ def findArucoMarkers(img, threshold, size=3, show=False):
         cv2.waitKey(1)
     
     return result
+
+
+def angleToPoint(centralPoint, angle, d=1):
+    angle = radians(degrees(angle) + 180)
+    x, y = centralPoint
+    nx = x + d * math.cos(angle)
+    ny = y + d * math.sin(angle)
+    return nx, ny
+
 
 
 def getMatrixFromAruco(imgGray, threshold, sizeAruco, show=False):

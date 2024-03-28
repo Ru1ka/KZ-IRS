@@ -41,9 +41,6 @@ class ArucoDetector:
                 markerIds.append(rawMarkerIds[i])
         return markerCorners, markerIds
 
-
-
-
 def findArucoMarkers(img, size=3, timer=3, show=False):
     detector = ArucoDetector(size, ALL_ARUCO_KEYS)
     imgGray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)

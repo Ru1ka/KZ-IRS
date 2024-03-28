@@ -20,6 +20,7 @@ class Robot:
         self.ip = ip
         self.port = port
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.stop()
 
     def send(self, message):
         self.sock.sendto(message, (self.ip, self.port))
@@ -120,6 +121,7 @@ def solve():
     imgScene = cam.read()
     saveImage(imgScene)
     resultPath = getResultPath(imgScene, route, show=True)
+    print(resultPath)
     driveToArucoMarkers(resultPath, speed=120, show=True)
     task.stop()
 

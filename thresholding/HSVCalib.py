@@ -4,7 +4,7 @@ import numpy as np
 
 def nothing(*arg): pass
 
-img = cv2.imread('test.png')
+img = cv2.imread('../docker/solution/images/Camera_0.png')
 lab = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
 l_channel, a, b = cv2.split(lab)
 clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(6, 6))

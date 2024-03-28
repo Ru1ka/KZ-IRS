@@ -196,7 +196,6 @@ def detectAruco(img, size=3, areaRange=(600, 2000), coefApprox=0.03, show=False)
 
     for cnt in contours:
         try:
-
             if show:
                 imgShow = img.copy()
                 showImage(imgShow)

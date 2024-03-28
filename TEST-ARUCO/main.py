@@ -1,7 +1,9 @@
 import cv2
 from cv2 import aruco
 import numpy as np
-from server.vision import showImage
+# from ..server.vision import showImage
+from math import hypot, atan2, degrees, radians
+import math
 
 ALL_ARUCO_KEYS = [1, 2, 3, 5, 6, 7, 10, 11, 12, 13, 14, 15, 17, 18, 19, 21, 22, 23, 26, 27, 28, 29, 30, 31, 33, 35, 37,
                   39, 41, 42, 43, 44, 45, 46, 47, 49, 51, 53, 55, 57, 58, 59, 60, 61, 62, 63, 69, 70, 71, 76, 77, 78,
@@ -9,6 +11,9 @@ ALL_ARUCO_KEYS = [1, 2, 3, 5, 6, 7, 10, 11, 12, 13, 14, 15, 17, 18, 19, 21, 22, 
                   115, 117, 118, 119, 121, 122, 123, 125, 126, 127, 141, 142, 143, 157, 158, 159, 171, 173, 175, 187,
                   189, 191, 197, 199, 205, 206, 207, 213, 215, 221, 222, 223, 229, 231, 237, 239, 245, 247, 253, 255,
                   327, 335, 343, 351, 367, 383]
+
+def showImage(img):
+    while cv2.waitKey(1) != 27: cv2.imshow('Image', img)
 
 class ArucoDetector:
     def __init__(self, size, whitelist):
@@ -54,6 +59,41 @@ arucoDict.bytesList[2] = aruco.Dictionary.getByteListFromBits(mybits)'''
 
 
 
+def getDistanceBetweenPoints(point1, point2):
+    return hypot(abs(point1[0] - point2[0]), abs(point1[1] - point2[1]))
+
+def rotateMatrix(matrix):
+    # Получаем количество строк и столбцов в матрице
+    num_rows = len(matrix)
+    num_cols = len(matrix[0])
+
+    # Создаем новую матрицу, в которую будем записывать повернутую матрицу
+    rotated_matrix = [[0] * num_rows for _ in range(num_cols)]
+
+    # Перебираем элементы исходной матрицы и записываем их в новую матрицу, повернутую на 90 градусов
+    for i in range(num_rows):
+        for j in range(num_cols):
+            rotated_matrix[j][num_rows - 1 - i] = matrix[i][j]
+
+    return rotated_matrix
+
+
+def angleBetweenPoints(point1, point2):
+    """Вычисляет угол между двумя точками и горизонтальной осью."""
+    return atan2(point2[1] - point1[1], point2[0] - point1[0])
+
+def getAngleBetweenLines(line1, line2):
+    startPosLine1, endPosLine1 = line1
+    startPosLine2, endPosLine2 = line2
+    vector1 = [(endPosLine1[axis] - startPosLine1[axis]) for axis in range(2)]
+    vector2 = [(endPosLine2[axis] - startPosLine2[axis]) for axis in range(2)]
+    scalarProduct = np.dot(vector1, vector2)
+    lengthVector1 = math.hypot(abs(vector1[0]), abs(vector1[1]))
+    lengthVector2 = math.hypot(abs(vector2[0]), abs(vector2[1]))
+    lengthsProduct = lengthVector1 * lengthVector2
+    if lengthsProduct == 0: return math.pi
+    angle = math.acos(scalarProduct / lengthsProduct)
+    return angle
 
 def findArucoMarkers(img, threshold, size=3, show=False):
     detector = ArucoDetector(size, ALL_ARUCO_KEYS)
@@ -66,14 +106,63 @@ def findArucoMarkers(img, threshold, size=3, show=False):
         for cnr, id in zip(markerCorners, markerIds):
             pos = list(map(int, list(cnr[0][0])))
             cv2.putText(imgShow, str(id), pos, cv2.FONT_HERSHEY_COMPLEX, 1, (0, 0, 255), 2)
-        showImage(imgShow)
+        cv2.imshow('Image', imgShow)
+    result = {}
     for cnr, id in zip(markerCorners, markerIds):
         corners = np.array(list(map(np.array, cnr[0])))
         imgWrapped = fourPointTransform(img, corners)
         imgWGray = cv2.cvtColor(imgWrapped, cv2.COLOR_BGR2GRAY)
         matrix = getMatrixFromAruco(imgWGray, threshold, size)
+        center_x = sum([i[0] for i in corners]) / 4
+        center_y = sum([i[1] for i in corners]) / 4
+        a, b = list(sorted(corners, key=lambda x: x[1]))[:2]
+        if b[0] < a[0]:
+            c = [a[0] + 5, a[1]]
+            angle = degrees(getAngleBetweenLines([b, a], [a, c]))
+        else:
+            c = [a[0] - 5, a[1]]
+            angle = -degrees(getAngleBetweenLines([b, a], [a, c]))
+            
+        corners.sort()
+        n = 0
+        while True:
+            markerId = 0
+            for i in range(9):
+                x = i % 3
+                y = i // 3
+                markerId += matrix[y][x] * 2**(8 - i)
+            
+            if markerId in ALL_ARUCO_KEYS:
+                angle += n * 90
+                if angle < 0:
+                    angle += 360
+                print(angle)
+                result[f"p_{id}"] = (center_x, center_y, radians(angle))
+                break
+            else:
+                n += 1
+                matrix = rotateMatrix(matrix)
+            
+            if n >= 4:
+                break        
+        # print(angle)
+        # print(markerId)
+        # print("___")
 
-        if show: showImage(imgWrapped)
+        if show:
+            cv2.imshow('Aruco', imgWrapped)
+    if show:
+        cv2.waitKey(1)
+    
+    return result
+
+
+def angleToPoint(centralPoint, angle, d=1):
+    angle = radians(degrees(angle) + 180)
+    x, y = centralPoint
+    nx = x + d * math.cos(angle)
+    ny = y + d * math.sin(angle)
+    return nx, ny
 
 
 def getMatrixFromAruco(imgGray, threshold, sizeAruco, show=False):
@@ -120,5 +209,11 @@ def fourPointTransform(image, corners):
     return imgWraped
 
 cap = cv2.VideoCapture(0)
-success, img = cap.read()
-findArucoMarkers(img, 50, show=True)
+while True:
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        cv2.destroyAllWindows()
+        break
+    
+    success, img = cap.read()
+    img = cv2.flip(img, 1)
+    findArucoMarkers(img, 150, show=True)

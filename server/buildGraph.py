@@ -324,6 +324,14 @@ def addEmptyArUco(points, emptyArUco):
     return points
 
 
+def deletePoints(points, x1, x2):
+    res = {}
+    for key, val in points.items:
+        if not x1 < val.pos < x2:
+            res[key] = val
+    return res
+
+
 def addPoints(points, addPoints):
     pointsList = list(points.values())
     for pointData in addPoints:

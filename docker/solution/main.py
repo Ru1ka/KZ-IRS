@@ -3,6 +3,7 @@ import os
 from const import ConstPlenty
 from vision import *
 from fastapi import FastAPI
+import cv2
 
 from nto.final import Task
 
@@ -65,7 +66,7 @@ def getResultPath(route):
 
 app = FastAPI()
 
-@app.get("/robot_ping")
+@app.get("/robot/pos")
 def robotPing():
     imgScene = cam.read()
     centerRobot, directionPoint = detectRobot(imgScene)

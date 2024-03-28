@@ -1,9 +1,15 @@
 import traceback
-
 import cv2
 import numpy as np
 import math
-from functools import lru_cache
+from funcs import *
+
+ALL_ARUCO_KEYS = [1, 2, 3, 5, 6, 7, 10, 11, 12, 13, 14, 15, 17, 18, 19, 21, 22, 23, 26, 27, 28, 29, 30, 31, 33, 35, 37,
+                  39, 41, 42, 43, 44, 45, 46, 47, 49, 51, 53, 55, 57, 58, 59, 60, 61, 62, 63, 69, 70, 71, 76, 77, 78,
+                  79, 85, 86, 87, 92, 93, 94, 95, 97, 98, 99, 101, 102, 103, 105, 106, 107, 109, 110, 111, 113, 114,
+                  115, 117, 118, 119, 121, 122, 123, 125, 126, 127, 141, 142, 143, 157, 158, 159, 171, 173, 175, 187,
+                  189, 191, 197, 199, 205, 206, 207, 213, 215, 221, 222, 223, 229, 231, 237, 239, 245, 247, 253, 255,
+                  327, 335, 343, 351, 367, 383]
 
 def getUndistortedImage(img, mtx, dist):
     h, w = img.shape[:2]
@@ -135,34 +141,6 @@ def getMarkupPositions(img, squareRange=(10, 115), adaptive=False, custom=True, 
         showImage(imgContours)
     return markupArray
 
-@lru_cache(None)
-def getDistanceBetweenPoints(point1, point2):
-    return math.hypot(abs(point1[0] - point2[0]), abs(point1[1] - point2[1]))
-
-
-def minDistanceBetweenLines(line1, line2):
-    return min([getDistanceBetweenPoints(point1, point2) for point1 in line1 for point2 in line2])
-
-def getPointOnSameLineOnSquare(vertexes, minDist, maxDist):
-    limitDist = minDist + (minDist + maxDist) // 2
-    for i, pos1 in enumerate(vertexes[:-1]):
-        for j, pos2 in enumerate(vertexes[i + 1:]):
-            if math.hypot(abs(pos1[0] - pos2[0]), abs(pos1[1] - pos2[1])) < limitDist:
-                return pos1, pos2
-
-def getAngleBetweenLines(line1, line2):
-    startPosLine1, endPosLine1 = line1
-    startPosLine2, endPosLine2 = line2
-    vector1 = [(endPosLine1[axis] - startPosLine1[axis]) for axis in range(2)]
-    vector2 = [(endPosLine2[axis] - startPosLine2[axis]) for axis in range(2)]
-    scalarProduct = np.dot(vector1, vector2)
-    lengthVector1 = math.hypot(abs(vector1[0]), abs(vector1[1]))
-    lengthVector2 = math.hypot(abs(vector2[0]), abs(vector2[1]))
-    lengthsProduct = lengthVector1 * lengthVector2
-    if lengthsProduct == 0: return math.pi
-    angle = math.acos(scalarProduct / lengthsProduct)
-    return angle
-
 def getCenterRobot(img):
     imgHSV = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     imgBinary = cv2.inRange(imgHSV, (86, 169, 29), (128, 255, 82))
@@ -178,14 +156,6 @@ def getOrientationPoints(img):
     contours, _ = cv2.findContours(imgBinary, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
     directionPoints = [findContourCenter(cnt) for cnt in contours]
     return directionPoints
-
-def getNearestPoints(points):
-    distances = []
-    for i, pnt1 in enumerate(points):
-        for j, pnt2 in enumerate(points[i+1:], start=i+1):
-            distances.append((getDistanceBetweenPoints(pnt1, pnt2), pnt1, pnt2))
-    nearestPoints = sorted(distances, key=lambda x: x[0])[0][1:]
-    return nearestPoints
 
 def detectRobot(img, show=False):
     centerRobot = getCenterRobot(img)

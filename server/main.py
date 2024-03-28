@@ -172,6 +172,12 @@ def debugLocal():
     img = cv2.imread("images/86.png")
 
     # route = ...  # загрузить из task
+    route = [
+        {"name":"p_1","marker_id":"143"},
+        {"name":"p_3","marker_id":"61"},
+        {"name":"p_5","marker_id":"21"},
+        {"name":"p_6","marker_id":"79"},
+    ]
 
     # Получение точек от cv2
     markupArray = getMarkupPositions(img)
@@ -179,7 +185,8 @@ def debugLocal():
     dictAruco = detectAruco(img, markerCorners, markerIds, 100)
     # dictAruco = detectAruco(img, 150, show=True)
 
-    # robotPos, angle = detectRobot()
+    # robotPos, angle = detectRobot(img)
+    robotPos = (0, 0)
     # Сборка и продление линий дороги
     roadLines = getRoadLines(markupArray)
     show.showLines(img, roadLines)
@@ -193,11 +200,13 @@ def debugLocal():
     graph = refactorGraph(graph)  # Двухстороннее движение
     graph = deletePoints(graph, 270, 300)
     show.showGraph(img, graph)
-    graph = addArucos(graph, dictAruco)
+    graph = addArucos(graph, dictAruco, route)
     show.showGraph(img, graph)
     # graph = addPoints(img, graph, route)
 
-    # path = getResultPositions(graph, robotPos)
+    path = getResultPositions(graph, robotPos, route)
+    print(len(path))
+    show.showResult(img, path[1:], route, dictAruco)
 
     # return path
 

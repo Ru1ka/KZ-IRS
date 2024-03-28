@@ -263,7 +263,7 @@ def addArucos(points, arucos, mainPoints=[]):
         points[newPoint.id] = newPoint
         points[pointId] = arucoPoint
 
-        left.neighbours = [newPoint]
+        left.neighbours += [newPoint]
         arucoPoint.neighbours = [newPoint]
         counter += 1
         # print(newPoint.neighbours)

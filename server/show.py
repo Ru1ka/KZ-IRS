@@ -21,7 +21,6 @@ def showGraph(img, points):
     # рисуем граф
     for point in points.values():
         for neighbour in point.neighbours:
-            print(neighbour.pos)
             cv2.line(imgLines, point.pos, neighbour.pos, (76, 235, 23), 2)
             cv2.circle(imgLines, point.pos, 5, (153, 0, 204), 2)
 
@@ -42,3 +41,17 @@ def showLines(img, lines):
             isA = not isA
             cv2.line(imgLines, line[i], line[i + 1], color, 2)
     showImage(imgLines)
+
+
+def showResult(img, path, route, dictAruco):
+    imgCopy = img.copy()
+    for point in route:
+        pos = point['coordinates'] if 'coordinates' in point else dictAruco[f"p_{point['marker_id']}"][0]
+        cv2.circle(imgCopy, pos, 5, (50, 50, 255), 2)
+        cv2.putText(imgCopy, point['name'].split('_')[1], (pos[0] - 10, pos[1] - 10), cv2.FONT_HERSHEY_COMPLEX, 0.7,
+                    (100, 0, 255), 2)
+    for i, point in enumerate(path):
+        for point2 in path[:i]: 
+            cv2.circle(imgCopy, point2.pos, 5, (100, 100, 0), 2)
+        cv2.circle(imgCopy, point.pos, 5, (255, 255, 0), 2)
+        showImage(imgCopy)

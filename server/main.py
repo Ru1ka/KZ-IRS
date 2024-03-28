@@ -168,7 +168,7 @@ def init(task):
 def debugLocal():
     DEBUG = settings().DEBUG
 
-    img = cv2.imread("images/71.png")
+    img = cv2.imread("images/86.png")
 
     # route = ...  # загрузить из task
 

@@ -181,3 +181,16 @@ def routeRefactor(route, dictAruco):
         points[i["name"]] = pos
     return points, res
 
+
+def serializePath(path):
+    # 1488
+    # "x,y,angle;x,y,angle;...;"
+    res = ""
+    for point in path:
+        x, y = point.pos
+        if point.isAruco:
+            res += f"{x},{y},{point.angle};"
+        else:
+            res += f"{x},{y},1488;"
+
+    return res

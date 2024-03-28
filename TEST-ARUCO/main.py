@@ -165,7 +165,6 @@ def angleToPoint(centralPoint, angle, d=1):
     return nx, ny
 
 
-
 def getMatrixFromAruco(imgGray, threshold, sizeAruco, show=False):
     height, width = imgGray.shape[:2]
     stepH, stepW = height // (sizeAruco+1), width // (sizeAruco+1)

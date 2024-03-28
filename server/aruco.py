@@ -42,8 +42,6 @@ class ArucoDetector:
         return markerCorners, markerIds
 
 
-
-
 def findArucoMarkers(img, size=3, timer=3, show=False):
     detector = ArucoDetector(size, ALL_ARUCO_KEYS)
     imgGray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -71,8 +69,8 @@ def detectAruco(img, markerCorners, markerIds, threshold=50, size=3, show=False)
         imgWrapped = fourPointTransform(img, corners)
         imgWGray = cv2.cvtColor(imgWrapped, cv2.COLOR_BGR2GRAY)
         matrix = getMatrixFromAruco(imgWGray, threshold, size)
-        center_x = sum([i[0] for i in corners]) / 4
-        center_y = sum([i[1] for i in corners]) / 4
+        center_x = round(sum([i[0] for i in corners]) / 4)
+        center_y = round(sum([i[1] for i in corners]) / 4)
         a, b = list(sorted(corners, key=lambda x: x[1]))[:2]
         if b[0] < a[0]:
             c = [a[0] + 5, a[1]]
@@ -92,7 +90,7 @@ def detectAruco(img, markerCorners, markerIds, threshold=50, size=3, show=False)
                 angle += n * 90
                 if angle < 0:
                     angle += 360
-                result[f"p_{id}"] = ((center_x, center_y), [tuple(_) for _ in corners.tolist()], math.radians(angle))
+                result[f"p_{id}"] = ((center_x, center_y), [tuple([_[1], _[0]]) for _ in corners.tolist()], math.radians(angle))
                 break
             else:
                 n += 1

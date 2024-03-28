@@ -193,12 +193,13 @@ def perpendicular_line(point_on_line, slope, distance=1):
     # Calculate coordinates of the new points
     x, y = point_on_line
     # Move the new points perpendicular to the original line
-    if perpendicular_slope == float('inf'):
+    if perpendicular_slope == float("+inf"):
         new_point1 = (x, y + distance)
         new_point2 = (x, y - distance)
     else:
         delta_x = distance / ((1 + perpendicular_slope ** 2) ** 0.5)
         delta_y = perpendicular_slope * delta_x
+        print(delta_x, delta_y)
         new_point1 = (x + delta_x, y + delta_y)
         new_point2 = (x - delta_x, y - delta_y)
 
@@ -217,6 +218,7 @@ def slope_between_points(p1, p2):
 
 def findIntersectionAruco(p1, p2, slope, distance=10):
     mid = ((p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2)
+    print(mid)
     return perpendicular_line(mid, slope, distance=distance)
 
 
@@ -239,6 +241,11 @@ def addArucos(points, arucos, mainPoints=[]):
         # Строим перпендикуляр к дороге
         closestPoint = pointsList[0]
         p1, p2 = list(sorted(aruco[1], key=lambda x: getDistanceBetweenPoints(closestPoint.pos, x)))[:2]
+        mid_point = ((p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2)
+        aruco = list(aruco)
+        if getDistanceBetweenPoints(mid_point, aruco[0]) > 17:
+            aruco[1] = tuple(map(lambda x: tuple([x[1], x[0]]), aruco[1]))
+            p1, p2 = list(sorted(aruco[1], key=lambda x: getDistanceBetweenPoints(closestPoint.pos, x)))[:2]
         slope = slope_between_points(p1, p2)
         a, b = findIntersectionAruco(p1, p2, slope, distance=20)
         newPointPos = min(a, b, key=lambda x: getDistanceBetweenPoints(x, closestPoint.pos))
@@ -252,7 +259,7 @@ def addArucos(points, arucos, mainPoints=[]):
             right = neighbours[1]
 
         arucoPoint = Point(pointId, aruco[0], isAruco=True, arucoAngle=aruco[2])
-        newPointPos = (round(newPointPos[0]), round(newPointPos[1]))
+        newPointPos = (round(newPointPos[0]), round(newPointPos[1])) 
         newPoint = Point(f"addedPoint_{counter}", newPointPos, neighbours=[right, arucoPoint])
 
         points[newPoint.id] = newPoint
@@ -339,7 +346,6 @@ def addPoints(points, addPoints):
     pointsList = list(points.values())
     for pointData in addPoints:
         if "coordinates" in pointData and pointData["name"] not in points:
-            pos = ...
             pointsList.sort(key=lambda p: getDistanceBetweenPoints(p.pos, tuple(pointData["coordinates"])))
             closest = pointsList[0]
             if closest.isCrossroad:

@@ -6,7 +6,8 @@ from const import ConstPlenty
 from vision import *
 from fastapi import FastAPI
 
-from detectAruco import detectAruco
+# from detectAruco import detectAruco
+from aruco import findArucoMarkers, detectAruco
 from vision import getMarkupPositions, detectRobot
 from buildGraph import getGraph, refactorGraph, addArucos, addPoints, deletePoints
 from algorithms import getRoadLines, extendLines, getResultPositions, routeRefactor
@@ -174,7 +175,9 @@ def debugLocal():
 
     # Получение точек от cv2
     markupArray = getMarkupPositions(img)
-    dictAruco = detectAruco(img, 150, show=True)
+    markerCorners, markerIds = findArucoMarkers(img)
+    dictAruco = detectAruco(img, markerCorners, markerIds, 100)
+    # dictAruco = detectAruco(img, 150, show=True)
 
     # robotPos, angle = detectRobot()
     # Сборка и продление линий дороги
@@ -188,13 +191,10 @@ def debugLocal():
     show.showGraph(img, graph)
 
     graph = refactorGraph(graph)  # Двухстороннее движение
-    graph = deletePoints(graph, 270, 300)
+    graph = deletePoints(graph, 275, 300)
     show.showGraph(img, graph)
     graph = addArucos(graph, dictAruco)
     show.showGraph(img, graph)
-    # emptyArUco = ...
-    # graph = addEmptyArUco(graph, emptyArUco)
-    # show.showGraph(img, graph)
     # graph = addPoints(img, graph, route)
 
     # path = getResultPositions(graph, robotPos)

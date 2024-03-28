@@ -1,6 +1,5 @@
 from graph import Line, Point
 from algorithms import getDistanceBetweenPoints, getPosRightSideSegment
-from vision import transformCords
 
 def addCrossroads(points, lines, dist):
     # PS тут много квадратичных сложностей, но концов точек меньше 200 штук, а перекрестков еще меньше
@@ -239,7 +238,7 @@ def addArucos(points, arucos, mainPoints=[]):
 
         # Строим перпендикуляр к дороге
         closestPoint = pointsList[0]
-        p1, p2 = list(sorted(aruco[2], key=lambda x: getDistanceBetweenPoints(closestPoint.pos, x)))[:2]
+        p1, p2 = list(sorted(aruco[1], key=lambda x: getDistanceBetweenPoints(closestPoint.pos, x)))[:2]
         slope = slope_between_points(p1, p2)
         a, b = findIntersectionAruco(p1, p2, slope, distance=20)
         newPointPos = min(a, b, key=lambda x: getDistanceBetweenPoints(x, closestPoint.pos))
@@ -252,7 +251,7 @@ def addArucos(points, arucos, mainPoints=[]):
             left = neighbours[0]
             right = neighbours[1]
 
-        arucoPoint = Point(pointId, aruco[0], isAruco=True, arucoAngle=aruco[1])
+        arucoPoint = Point(pointId, aruco[0], isAruco=True, arucoAngle=aruco[2])
         newPointPos = (round(newPointPos[0]), round(newPointPos[1]))
         newPoint = Point(f"addedPoint_{counter}", newPointPos, neighbours=[right, arucoPoint])
 
@@ -326,9 +325,13 @@ def addEmptyArUco(points, emptyArUco):
 
 def deletePoints(points, x1, x2):
     res = {}
-    for key, val in points.items:
-        if not x1 < val.pos < x2:
+    for key, val in points.items():
+        if not x1 < val.pos[0] < x2:
             res[key] = val
+    for key, val in res.items():
+        for n in val.neighbours:
+            if n.id not in res:
+                val.neighbours = n.neighbours
     return res
 
 

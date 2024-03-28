@@ -186,65 +186,6 @@ def arucoThresholdImage(imgGray, show=False):
     if show: showImage(imgBinary)
     return imgBinary
 
-def detectAruco(img, size=3, areaRange=(600, 2000), coefApprox=0.03, show=False):
-    imgGray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    imgBinary = arucoThresholdImage(imgGray, show=show)
-    if show: showImage(imgBinary)
-    contours, _ = cv2.findContours(imgBinary, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
-    dictAruco = {}
-
-
-    for cnt in contours:
-        try:
-            if show:
-                imgShow = img.copy()
-                showImage(imgShow)
-            epsilon = coefApprox * cv2.arcLength(cnt, True)
-            approx = cv2.approxPolyDP(cnt, epsilon, True)
-            contourVertexes = [(pos[0][0], pos[0][1]) for pos in approx]
-            if show:
-                [cv2.circle(imgShow, pos, 3, (0, 0, 255), -1) for pos in contourVertexes]
-                showImage(imgShow)
-            centerContour = (round(sum([pos[0] for pos in contourVertexes]) / 4),
-                             round(sum([pos[1] for pos in contourVertexes]) / 4))
-            if show:
-                cv2.circle(imgShow, centerContour, 3, (255, 0, 0), -1)
-                showImage(imgShow)
-            allDistBetweenPoints = [round(math.hypot(abs(pos1[0] - pos2[0]), abs(pos1[1] - pos2[1])))
-                                    for i, pos1 in enumerate(contourVertexes[:-1])
-                                    for j, pos2 in enumerate(contourVertexes[i + 1:])]
-            widthContour, heightContour = sorted(allDistBetweenPoints)[:2]
-            pointContour1, pointContour2 = getPointOnSameLineOnSquare(contourVertexes, min(allDistBetweenPoints), max(allDistBetweenPoints))
-            angleBetweenContourAndAbscissa = getAngleBetweenLines((pointContour2, pointContour1), (pointContour1, (10, pointContour1[1])))
-            imgAruco = rotateImageByPoint(img, centerContour, angleBetweenContourAndAbscissa, widthContour, heightContour)
-            imgAruco = cv2.cvtColor(imgAruco, cv2.COLOR_BGR2GRAY)
-            shapeImgAruco = imgAruco.shape[:2]
-            sizeOneCell = (shapeImgAruco[1] / (size + 2), shapeImgAruco[0] / (size + 2))
-            arucoArray = np.zeros((size, size), dtype=np.uint8)
-            for i in range(size):
-                for j in range(size):
-                    basePosX, basePosY = sizeOneCell[0] * 1.5, sizeOneCell[1] * 1.5
-                    posX, posY = round(basePosX + sizeOneCell[0] * j), round(basePosY + sizeOneCell[1] * i)
-                    valueCell = imgAruco[posY, posX]
-                    arucoArray[i, j] = valueCell > 100
-                    #if show: cv2.circle(imgAruco, (posX, posY), 1, (100, 100, 100), 2)
-            #if show: showImage(imgAruco)
-            for i in range(4):
-                cpArucoArray = arucoArray.copy()
-                cpArucoArray.resize(size ** 2)
-                numberAruco = int(''.join(list(map(str, cpArucoArray))), 2)
-                if numberAruco in ALL_ARUCO_KEYS: break
-                arucoArray = np.rot90(arucoArray)
-            else: continue
-            dictAruco[f'p_{numberAruco}'] = (centerContour, angleBetweenContourAndAbscissa)
-            if show: cv2.putText(imgContours, str(numberAruco), contourVertexes[1], cv2.FONT_HERSHEY_COMPLEX, 1, (100, 0, 255), 2)
-        except: traceback.print_exc()
-    if show:
-        cv2.destroyWindow('Aruco')
-        cv2.drawContours(imgContours, arucoContours, -1, (0, 0, 255), 1)
-        showImage(imgContours)
-    return dictAruco
-
 def getCenterRobot(img):
     imgHSV = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     imgBinary = cv2.inRange(imgHSV, (86, 169, 29), (128, 255, 82))

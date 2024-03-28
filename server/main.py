@@ -6,15 +6,19 @@ from const import ConstPlenty
 from vision import *
 from fastapi import FastAPI
 
-from vision import detectAruco, getMarkupPositions, detectRobot
-from buildGraph import getGraph, refactorGraph, addArucos, addPoints
+from detectAruco import detectAruco
+from vision import getMarkupPositions, detectRobot
+from buildGraph import getGraph, refactorGraph, addArucos, addPoints, deletePoints
 from algorithms import getRoadLines, extendLines, getResultPositions, routeRefactor
 import saveImg as svimg
+import show
+import saveImg as svImg
+from settings import settings
 
-from nto.final import Task
+# from nto.final import Task
 
-const = ConstPlenty()
-task = Task()
+# const = ConstPlenty()
+# task = Task()
 
 class Camera:
     def __init__(self, index, matrix, distortion):
@@ -48,9 +52,9 @@ class Robot:
     def on(self):
         self.send(b'on')
 
-robot = Robot('10.128.73.81', 5005)
-cam1 = Camera(0, const.cam1.matrix, const.cam1.distortion)
-cam2 = Camera(1, const.cam2.matrix, const.cam2.distortion)
+# robot = Robot('10.128.73.81', 5005)
+# cam1 = Camera(0, const.cam1.matrix, const.cam1.distortion)
+# cam2 = Camera(1, const.cam2.matrix, const.cam2.distortion)
 
 def solve():
     task = Task()
@@ -123,5 +127,83 @@ def runWebhook():
                 host="0.0.0.0",
                 port=5400)
 
+def init(task):
+    DEBUG = settings().DEBUG
+
+    img = ...
+
+    # route = ...  # загрузить из task
+
+    # Получение точек от cv2
+    contours, markupArray = getMarkupPositions()
+    dictAruco = detectAruco()
+    robotPos, angle = detectRobot()
+    if DEBUG:
+        svImg.markupPositions(img, contours, markupArray)
+        svImg.dictAruco(img, dictAruco)
+        svImg.robotPos(img, detectRobot)
+        
+    # Сборка и продление линий дороги
+    roadLines = getRoadLines(markupArray)
+    extendedRoadLines = extendLines(roadLines)
+    if DEBUG:
+        svImg.roadLines(img, roadLines)
+        svImg.extendLines(img, extendedRoadLines)
+    # Сборка графа
+    graph = getGraph(extendedRoadLines, distCrossroads=20)
+    if DEBUG: svImg.saveGraph(img, graph)
+
+
+    graph = refactorGraph(graph)  # Двухстороннее движение
+    if DEBUG: svImg.saveGraph(img, graph)
+    # graph = addArucos(img, graph, dictAruco, route)
+    # graph = addPoints(img, graph, route)
+
+    path = getResultPositions(graph, robotPos)
+    if DEBUG: svImg.savePath(img, path)
+
+    return path
+
+
+def debugLocal():
+    DEBUG = settings().DEBUG
+
+    img = cv2.imread("images/71.png")
+
+    # route = ...  # загрузить из task
+
+    # Получение точек от cv2
+    markupArray = getMarkupPositions(img)
+    dictAruco = detectAruco(img, 150, show=True)
+
+    # robotPos, angle = detectRobot()
+    # Сборка и продление линий дороги
+    roadLines = getRoadLines(markupArray)
+    show.showLines(img, roadLines)
+    extendedRoadLines = extendLines(roadLines)
+    show.showLines(img, extendedRoadLines)
+
+    # Сборка графа
+    graph = getGraph(extendedRoadLines, distCrossroads=40)
+    show.showGraph(img, graph)
+
+    graph = refactorGraph(graph)  # Двухстороннее движение
+    graph = deletePoints(graph, 270, 300)
+    show.showGraph(img, graph)
+    graph = addArucos(graph, dictAruco)
+    show.showGraph(img, graph)
+    # emptyArUco = ...
+    # graph = addEmptyArUco(graph, emptyArUco)
+    # show.showGraph(img, graph)
+    # graph = addPoints(img, graph, route)
+
+    # path = getResultPositions(graph, robotPos)
+
+    # return path
+
+
 if __name__ == '__main__':
-    solve()
+    if settings().LOCAL:
+        debugLocal()
+    else:
+        solve()

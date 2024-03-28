@@ -92,7 +92,7 @@ def detectAruco(img, markerCorners, markerIds, threshold=50, size=3, show=False)
                 angle += n * 90
                 if angle < 0:
                     angle += 360
-                result[f"p_{id}"] = ((center_x, center_y), math.radians(angle))
+                result[f"p_{id}"] = (center_x, center_y, math.radians(angle))
                 break
             else:
                 n += 1

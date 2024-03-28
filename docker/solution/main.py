@@ -5,6 +5,7 @@ from vision import *
 from aruco import findArucoMarkers, detectAruco
 from fastapi import FastAPI
 import cv2
+import time
 
 from nto.final import Task
 
@@ -16,7 +17,7 @@ class Camera:
         self.index = index
         self.matrix = matrix
         self.distortion = distortion
-        self.cap = cv2.VideoCapture(0)
+        self.cap = cv2.VideoCapture(2)
         self.cap.set(cv2.CAP_PROP_BRIGHTNESS, 20)
         self.cap.set(cv2.CAP_PROP_FOCUS, 0)
         self.cap.set(cv2.CAP_PROP_SATURATION, 0)
@@ -40,6 +41,7 @@ class Robot:
 
     def sendPath(self, path):
         strPath = ';'.join([','.join(list(map(str, pos))) for pos in path])+';'
+        print(strPath)
         self.send(strPath.encode('utf-8'))
 
 robot = Robot('10.128.73.116', 5005)
@@ -50,17 +52,18 @@ def solve():
     task.start()
     saveImage()
     path = getResultPath(eval(task.getTask()))
-    #robot.sendPath(path)
-    task.stop()
+    robot.sendPath(path)
     runWebhook()
+    task.stop()
 
 def saveImage():
     cv2.imwrite(os.path.join(const.path.images, f'{cam}.png'), cam.read())
 
 def getResultPath(route):
     imgScene = cam.read()
-    markerCorners, markerIds = findArucoMarkers(imgScene, show=True)
+    markerCorners, markerIds = findArucoMarkers(imgScene, show=False)
     arucoPositions = detectAruco(imgScene, markerCorners, markerIds)
+    print(len(arucoPositions), arucoPositions)
     resultPath = []
     route = [{'marker_id': 2}, {'marker_id': 55}, {'marker_id': 205}]
     for aruco in route:

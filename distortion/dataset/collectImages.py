@@ -9,7 +9,7 @@ def makeNewPhoto(img1):
     #cv2.imwrite(f'cam2/{fileNum2}.png', img2)
 
 cam1 = cv2.VideoCapture(2)
-#cam2 = cv2.VideoCapture('http://student:nto2024@10.128.73.38/mjpg/video.mjpg')
+cam2 = cv2.VideoCapture('http://student:nto2024@10.128.73.38/mjpg/video.mjpg')
 
 while True:
     success1, img1 = cam1.read()

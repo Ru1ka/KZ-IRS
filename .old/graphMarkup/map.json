@@ -1,0 +1,41 @@
+{
+    "graph": {},
+    "notations": {
+        "1": {
+            "id": 1,
+            "pos": [
+                202,
+                395
+            ],
+            "isCrossroad": false,
+            "isAruco": false
+        },
+        "2": {
+            "id": 2,
+            "pos": [
+                375,
+                258
+            ],
+            "isCrossroad": false,
+            "isAruco": false
+        },
+        "3": {
+            "id": 3,
+            "pos": [
+                508,
+                321
+            ],
+            "isCrossroad": false,
+            "isAruco": false
+        },
+        "4": {
+            "id": 4,
+            "pos": [
+                607,
+                373
+            ],
+            "isCrossroad": false,
+            "isAruco": false
+        }
+    }
+}

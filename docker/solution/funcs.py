@@ -28,7 +28,6 @@ def getErrorByPoints(point1, point2, commonPoint, reverse=True):
     return error
 
 def getNearestPoints(points):
-    print(points)
     distances = []
     for i, pnt1 in enumerate(points):
         for j, pnt2 in enumerate(points[i+1:], start=i+1):

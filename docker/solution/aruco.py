@@ -95,8 +95,7 @@ def detectAruco(img, markerCorners, markerIds, threshold=50, size=3, show=False)
                 n += 1
                 matrix = rotateMatrix(matrix)
             if n >= 4: break
-        if show:
-            cv2.imshow('Aruco', imgWrapped)
+        if show: cv2.imshow('Aruco', imgWrapped)
     return result
 
 def getMatrixFromAruco(imgGray, threshold, sizeAruco, show=False):

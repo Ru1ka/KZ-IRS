@@ -29,7 +29,7 @@ def main():
     print("Send cmd...\n")
 
     while 1:
-        text = raw_input() # Note change to the old (Python 2) raw_input
+        text = raw_input() # Note change to the .old (Python 2) raw_input
         if text == "q":
             break
         car.send(text)

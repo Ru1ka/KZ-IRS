@@ -239,5 +239,10 @@ def detectAruco(img, size=3, areaRange=(800, 1300), coefApprox=0.03, show=False)
         showImage(imgContours)
     return dictAruco
 
+
+def transformCords(x, y, cam):
+    # x, y for full img
+    pass
+
 def showImage(img):
     while cv2.waitKey(1) != 27: cv2.imshow('Image', img)

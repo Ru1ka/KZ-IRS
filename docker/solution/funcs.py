@@ -6,6 +6,7 @@ import cv2
 
 @lru_cache(None)
 def getDistanceBetweenPoints(point1, point2):
+    if not point1 or not point2: return float('inf')
     return math.hypot(abs(point1[0] - point2[0]), abs(point1[1] - point2[1]))
 
 def rotateMatrix(matrix):
@@ -27,6 +28,7 @@ def getErrorByPoints(point1, point2, commonPoint, reverse=True):
     return error
 
 def getNearestPoints(points):
+    print(points)
     distances = []
     for i, pnt1 in enumerate(points):
         for j, pnt2 in enumerate(points[i+1:], start=i+1):

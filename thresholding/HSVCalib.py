@@ -4,7 +4,9 @@ import numpy as np
 
 def nothing(*arg): pass
 
-img = cv2.imread('72.png')
+cap = cv2.VideoCapture(2)
+_, img = cap.read()
+# img = cv2.imread('78.png')
 lab = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
 l_channel, a, b = cv2.split(lab)
 clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(6, 6))

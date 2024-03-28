@@ -205,10 +205,10 @@ def debugLocal():
     # graph = addPoints(img, graph, route)
 
     path = getResultPositions(graph, robotPos, route)
+    # show.showResult(img, path, route, dictAruco)
     print(len(path))
-    show.showResult(img, path[1:], route, dictAruco)
 
-    # return path
+    return path
 
 
 if __name__ == '__main__':

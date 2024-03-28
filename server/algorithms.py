@@ -124,7 +124,7 @@ def getResultPositions(graph, robotPos, mainPoints):
     start = plist[0]
     mainPoints = [i["name"] for i in mainPoints]
     last = start
-    resultPositions = [start.pos]
+    resultPositions = [start]
     for point in mainPoints:
         point = graph[point]
         path = findPathBFS(last, point)
@@ -180,17 +180,3 @@ def routeRefactor(route, dictAruco):
         res += [i["name"]]
         points[i["name"]] = pos
     return points, res
-
-
-def serializePath(path):
-    # 1488
-    # "x,y,angle;x,y,angle;...;"
-    res = ""
-    for point in path:
-        x, y = point.pos
-        if point.isAruco:
-            res += f"{x},{y},{point.angle};"
-        else:
-            res += f"{x},{y},1488;"
-
-    return res

@@ -71,9 +71,7 @@ class Camera:
         self.cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*"MJPG"))
 
     def read(self):
-        #success, img = self.cap.read()
-        success = True
-        img = cv2.imread('../../distortion/dataset/arucos/68.png')
+        success, img = self.cap.read()
         return img if success else None
 
     def release(self):

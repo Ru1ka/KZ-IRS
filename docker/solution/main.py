@@ -12,7 +12,7 @@ import cv2
 
 const = ConstPlenty()
 robot = Robot('10.128.73.116', 5005)
-camera = Camera(index=0)
+camera = Camera(index=2)
 
 def saveImage(img, fileName='Camera.png'):
     cv2.imwrite(os.path.join(const.path.images, fileName), img)
@@ -31,15 +31,15 @@ def solve(debug=True):
     task = Task()
 
     task.start()
-    route = task.getTask()
-    route = [{'marker_id': 2}, {'marker_id': 55}, {'marker_id': 205}]
+    route = eval(task.getTask())
+    # route = [{'marker_id': 2}, {'marker_id': 55}, {'marker_id': 205}]
     print(route)
     saveImage(camera.read())
     resultPath = getResultPath(route, show=True, debug=debug)
     if debug: print('WAIT...')
     while cv2.waitKey(1) != 32: cv2.imshow('ImageScene', camera.read())
     if debug: print('DONE')
-    driveToArucoMarkers(resultPath, speed=60, show=True, debug=debug)
+    driveToArucoMarkers(resultPath, speed=120, show=True, debug=debug)
 
     robot.stop()
     camera.release()
@@ -66,7 +66,7 @@ def driveForwardToPoint(posAruco, speed, show=False, debug=False):
         if not centerRobot or not directionPoint: continue
         distance = getDistanceBetweenPoints(centerRobot, posAruco)
         if debug: print(f'[DISTANCE]: {distance}')
-        if distance < 10: break
+        if abs(distance) < 7: break
         error = getErrorByPoints(directionPoint, posAruco, centerRobot)
         if debug: print(f'[ERROR ANGLE]: {error}, {math.degrees(error)}')
         robot.angleRegulator(error, speed)
@@ -75,13 +75,13 @@ def driveForwardToPoint(posAruco, speed, show=False, debug=False):
             cv2.line(imgShow, list(map(int, directionPoint)), list(map(int, centerRobot)), (0, 0, 255), 2)
             cv2.line(imgShow, list(map(int, centerRobot)), list(map(int, posAruco)), (255, 0, 0), 2)
             showImage(imgShow)
-    robot.stop()
+    robot.bstop()
 
 def driveRotateToAngle(angleAruco, angleLimit, show=False, debug=False):
     imgScene = camera.read()
     centerRobot, directionPoint = detectRobot(imgScene, show=show)
     directionArucoPoint = angleToPoint(centerRobot, angleAruco, d=35)
-    robot.resetRegulator()
+    flag = True
     while True:
         imgScene = camera.read()
         centerRobot, directionPoint = detectRobot(imgScene)
@@ -89,13 +89,32 @@ def driveRotateToAngle(angleAruco, angleLimit, show=False, debug=False):
         error = getErrorByPoints(directionPoint, directionArucoPoint, centerRobot)
         if debug: print(f'[ERROR ANGLE]: {error}')
         if abs(error) < math.radians(angleLimit): break
-        robot.angleRegulator(error, 0, kp=4, kd=10)
+        if error > 0:
+            robot.turnRight(40)
+            robot.turnLeft(-38)
+            flag = True
+        else:
+            robot.turnRight(-40)
+            robot.turnLeft(38)
+            flag = False
         if show:
             imgShow = imgScene.copy()
             cv2.line(imgShow, list(map(int, directionPoint)), list(map(int, centerRobot)), (0, 0, 255), 2)
             cv2.line(imgShow, list(map(int, centerRobot)), list(map(int, directionArucoPoint)), (255, 0, 0), 2)
             cv2.circle(imgShow, list(map(int, directionArucoPoint)), 3, (0, 255, 0), -1)
             showImage(imgShow)
+    if flag:
+        robot.turnRight(-40)
+        robot.turnLeft(38)
+    else:
+        robot.turnRight(40)
+        robot.turnLeft(-38)
+    lastTime = time.time() + 0.07
+    while lastTime > time.time(): pass
+    robot.turnRight(120)
+    robot.turnLeft(120)
+    lastTime = time.time() + 0.06
+    while lastTime > time.time(): pass
     robot.stop()
 
 def driveToArucoMarkers(path, speed, show=False, debug=False):
@@ -111,12 +130,15 @@ def driveToArucoMarkers(path, speed, show=False, debug=False):
             if show: showImage(imgScene)
         if debug: print('FORWARD')
         driveForwardToPoint(posAruco, speed, show, debug)
-        time.sleep(1)
+        time.sleep(2)
         if debug: print('ROTATE')
-        driveRotateToAngle(angleAruco, angleLimit=7, show=show, debug=debug)
-        time.sleep(1)
+        driveRotateToAngle(angleAruco, angleLimit=6, show=show, debug=debug)
+        if debug: print('DONE')
+        time.sleep(2)
         if debug: print('ROTATE 360')
         robot.rotate360()
+        robot.bstop()
+        time.sleep(2)
 
 if __name__ == '__main__':
     solve()

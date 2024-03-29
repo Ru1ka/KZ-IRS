@@ -31,7 +31,7 @@ def getBinaryImage(img, blockSize, C, sizeBlur):
 
 def main():
     countDiv = int(input('Введите количество делений: '))
-    camera = Camera(0)
+    camera = Camera(2)
     camera.setDefaultSettings()
     for n in range(countDiv): createBars(n)
     while True:

@@ -50,6 +50,7 @@ def solve(fileName='data.json'):
     route = task.getTask()
     imgScene = getScene()
     saveImage(imgScene)
+    while True: showImage(imgScene)
     resultPath = initServer(imgScene, route, fileName)
     print(resultPath)
     driveByPath(resultPath, speed=60, show=False, debug=True)
@@ -83,7 +84,7 @@ def driveForwardToPoint(posPoint, speed, show=False, debug=False):
         if not centerRobot or not directionPoint: continue
         distance = getDistanceBetweenPoints(centerRobot, posPoint)
         if debug: print(f'[DISTANCE]: {distance}')
-        if distance < 10: break
+        if distance < 7: break
         error = getErrorByPoints(directionPoint, posPoint, centerRobot)
         if debug: print(f'[ERROR ANGLE]: {error}, {math.degrees(error)}')
         robot.angleRegulator(error, speed)
@@ -92,13 +93,13 @@ def driveForwardToPoint(posPoint, speed, show=False, debug=False):
             cv2.line(imgShow, list(map(int, directionPoint)), list(map(int, centerRobot)), (0, 0, 255), 2)
             cv2.line(imgShow, list(map(int, centerRobot)), list(map(int, posPoint)), (255, 0, 0), 2)
             showImage(imgShow)
-    robot.stop()
+    robot.bstop()
 
 def driveRotateToAngle(anglePoint, angleLimit, show=False, debug=False):
     imgScene = getScene()
     centerRobot, directionPoint = detectRobot(imgScene, show=show)
     directionArucoPoint = angleToPoint(centerRobot, anglePoint, d=35)
-    robot.resetRegulator()
+    flag = True
     while True:
         imgScene = getScene()
         centerRobot, directionPoint = detectRobot(imgScene)
@@ -106,13 +107,32 @@ def driveRotateToAngle(anglePoint, angleLimit, show=False, debug=False):
         error = getErrorByPoints(directionPoint, directionArucoPoint, centerRobot)
         if debug: print(f'[ERROR ANGLE]: {error}')
         if abs(error) < math.radians(angleLimit): break
-        robot.angleRegulator(error, 0, kp=4, kd=10)
+        if error > 0:
+            robot.turnRight(40)
+            robot.turnLeft(-38)
+            flag = True
+        else:
+            robot.turnRight(-40)
+            robot.turnLeft(38)
+            flag = False
         if show:
             imgShow = imgScene.copy()
             cv2.line(imgShow, list(map(int, directionPoint)), list(map(int, centerRobot)), (0, 0, 255), 2)
             cv2.line(imgShow, list(map(int, centerRobot)), list(map(int, directionArucoPoint)), (255, 0, 0), 2)
             cv2.circle(imgShow, list(map(int, directionArucoPoint)), 3, (0, 255, 0), -1)
             showImage(imgShow)
+    if flag:
+        robot.turnRight(-40)
+        robot.turnLeft(38)
+    else:
+        robot.turnRight(40)
+        robot.turnLeft(-38)
+    lastTime = time.time() + 0.07
+    while lastTime > time.time(): pass
+    robot.turnRight(120)
+    robot.turnLeft(120)
+    lastTime = time.time() + 0.06
+    while lastTime > time.time(): pass
     robot.stop()
 
 def driveByPath(path, speed, show=False, debug=False):
@@ -128,12 +148,15 @@ def driveByPath(path, speed, show=False, debug=False):
         if debug: print('FORWARD')
         driveForwardToPoint(posPoint, speed, show, debug)
         if anglePoint is None: continue
-        time.sleep(1)
+        time.sleep(2)
         if debug: print('ROTATE')
         driveRotateToAngle(anglePoint, angleLimit=7, show=show, debug=debug)
-        time.sleep(1)
+        if debug: print('DONE')
+        time.sleep(2)
         if debug: print('ROTATE 360')
         robot.rotate360()
+        robot.bstop()
+        time.sleep(2)
 
 def debugLocal():
     img = cv2.imread(settings().IMAGEFILE)

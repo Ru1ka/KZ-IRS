@@ -26,8 +26,8 @@ def getBinaryImage(img, blockSize, C, sizeBlur):
     return imgBinary
 
 def main():
-    camera = Camera(0)
-    camera.setDefaultSettings()
+    camera = Camera(2)
+    camera.setArucoSettings()
     createBars()
     while True:
         img = camera.read()

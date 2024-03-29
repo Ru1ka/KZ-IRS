@@ -50,7 +50,7 @@ def showDetectedMarkers(img, markerCorners, markerIds):
     showImage(imgShow)
     showImage(cv2.cvtColor(imgShow, cv2.COLOR_BGR2GRAY))
 
-def findArucoMarkers(camera, size=3, timer=3, blockSize=41, C=17, sizeBlur=3, show=False):
+def findArucoMarkers(camera, size=3, timer=2, blockSize=73, C=14, sizeBlur=2, show=False):
     detector = ArucoDetector(size, whitelist=ALL_ARUCO_KEYS)
     lastTime = time.time()
     markerDict = {}

@@ -1,1 +1,1 @@
-scp -r server/* nto-koraz@10.128.73.40:/home/nto-koraz/workspace/docker/solution/
+scp -r server/solution/* nto-koraz@10.128.73.40:/home/nto-koraz/workspace/docker/solution/

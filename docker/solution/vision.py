@@ -18,7 +18,7 @@ def adaptiveThresholdImage(imgGray, blockSize, C, sizeBlur):
 def binaryCenterRobotImage(img):
     imgHSV = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 
-    HSVMin = (41, 99, 38)
+    '''HSVMin = (41, 99, 38)
     HSVMax = (157, 214, 84)  # - 170
     imgBinary1 = cv2.inRange(imgHSV[:170], HSVMin, HSVMax)
 
@@ -34,13 +34,19 @@ def binaryCenterRobotImage(img):
     HSVMax = (145, 255, 38)  # 380 -
     imgBinary4 = cv2.inRange(imgHSV[380:], HSVMin, HSVMax)
 
+    imgBinary = np.concatenate((imgBinary1, imgBinary2, imgBinary3, imgBinary4), axis=0)'''
+    imgBinary1 = cv2.inRange(imgHSV[0:120], (49, 104, 142), (138, 193, 208))
+    imgBinary2 = cv2.inRange(imgHSV[120:240], (48, 86, 141), (126, 195, 216))
+    imgBinary3 = cv2.inRange(imgHSV[240:360], (4, 91, 100), (139, 236, 215))
+    imgBinary4 = cv2.inRange(imgHSV[360:480], (18, 101, 51), (130, 179, 198))
     imgBinary = np.concatenate((imgBinary1, imgBinary2, imgBinary3, imgBinary4), axis=0)
+
     return imgBinary
 
 def binaryOrientationPointsImage(img):
     imgHSV = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 
-    HSVMin = (33, 38, 62)
+    '''HSVMin = (33, 38, 62)
     HSVMax = (202, 255, 228)  # - 170
     imgBinary1 = cv2.inRange(imgHSV[:170], HSVMin, HSVMax)
 
@@ -56,6 +62,11 @@ def binaryOrientationPointsImage(img):
     HSVMax = (190, 164, 94)  # 380 -
     imgBinary4 = cv2.inRange(imgHSV[380:], HSVMin, HSVMax)
 
+    imgBinary = np.concatenate((imgBinary1, imgBinary2, imgBinary3, imgBinary4), axis=0)'''
+    imgBinary1 = cv2.inRange(imgHSV[0:120], (19, 15, 144), (216, 150, 255))
+    imgBinary2 = cv2.inRange(imgHSV[120:240], (29, 24, 159), (188, 164, 224))
+    imgBinary3 = cv2.inRange(imgHSV[240:360], (38, 44, 135), (229, 232, 220))
+    imgBinary4 = cv2.inRange(imgHSV[360:480], (27, 21, 156), (185, 178, 222))
     imgBinary = np.concatenate((imgBinary1, imgBinary2, imgBinary3, imgBinary4), axis=0)
     return imgBinary
 
@@ -86,12 +97,12 @@ def getRobotPoints(img, show=False):
     return centerRobot, orientationPoints
 
 def detectRobot(img, show=False):
-    centerRobot, orientationPoints = getRobotPoints(img, show=show)
+    centerRobot, orientationPoints = getRobotPoints(img, show=False)
     if not centerRobot or not orientationPoints: return None
     nearestPoints = getNearestPoints(orientationPoints)
     directionPoint = ((nearestPoints[0][0] + nearestPoints[1][0]) // 2,
                       (nearestPoints[0][1] + nearestPoints[1][1]) // 2)
-    if show:
+    if False:
         imgShow = img.copy()
         cv2.circle(imgShow, centerRobot, 3, (0, 0, 255), -1)
         [cv2.circle(imgShow, pnt, 3, (255, 255, 255), -1) for pnt in orientationPoints]

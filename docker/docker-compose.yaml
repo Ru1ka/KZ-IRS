@@ -19,6 +19,6 @@ services:
       - DISPLAY
       - QT_X11_NO_MITSHM=1
       - XAUTHORITY
-      - TASK_ID=10
+      - TASK_ID=23
       - SERVER_ADDRESS=10.128.73.40
       - SERVER_PORT=8000

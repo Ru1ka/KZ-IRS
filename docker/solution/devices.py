@@ -17,7 +17,7 @@ class Robot:
     def resetRegulator(self):
         self.oldError = 0
 
-    def angleRegulator(self, error, maxSpeed, angleLimit=8, kp=4, kd=10):
+    def angleRegulator(self, error, maxSpeed, angleLimit=8, kp=5, kd=10):
         if abs(error) < math.radians(angleLimit): speed = maxSpeed
         else: speed = 0
         u = error * kp + (error - self.oldError) * kd
@@ -25,7 +25,7 @@ class Robot:
         self.turnRight(speed + u)
         self.turnLeft(speed - u)
 
-    def rotate360(self, speedR=60, speedL=-55, timer=2.5):
+    def rotate360(self, speedR=60, speedL=-55, timer=2.65):
         lastTime = time.time()
         self.turnRight(speedR)
         self.turnLeft(speedL)
@@ -43,6 +43,11 @@ class Robot:
     def stop(self):
         for dir in range(2):
             command = f'{dir}:0'
+            self.send(command.encode('utf-8'))
+
+    def bstop(self):
+        for dir in range(2):
+            command = f'{dir}:1'
             self.send(command.encode('utf-8'))
 
 class Camera:

@@ -59,13 +59,14 @@ def scley(binLeft, binRight, offsetCenter=-55):
 def getScene():
     return getFullScene(cam1.read(), cam2.read())
 
-def solve(fileName='/solution/data.json'):
+def solve(fileName='data.json'):
     task.start()
 
-    route = eval(task.getTask())
+    #route = eval(task.getTask())
+    route = [{"name":"p_1","marker_id":"143"},{"name":"p_2","coordinates":[361,523,1]},{"name":"p_3","marker_id":"61"},{"name":"p_4","coordinates":[977,217,2]},{"name":"p_5","marker_id":"21"},{"name":"p_6","marker_id":"79"},{"name":"p_7","coordinates":[347,153,1]},{"name":"p_8","coordinates":[863,496,2]},{"name":"p_9","coordinates":[565,501,2]},{"name":"p_10","coordinates":[393,227,2]}]
     mark = route[0]
     if 'coordinates' in mark:
-        pos, cameraId = mark['coordinates']
+        pos, cameraId = mark['coordinates'][:2], mark['coordinates'][2]
         binLeft = getUndistortedImage(cam1.readRaw(), const.cam1.matrix, const.cam1.distortion)
         binRight = getUndistortedImage(cam2.readRaw(), const.cam2.matrix, const.cam2.distortion)
 
@@ -74,6 +75,7 @@ def solve(fileName='/solution/data.json'):
         rb1 = scley(binLeft, binRight, offsetCenter=-50)
         rb2 = scley(binLeft, binRight, offsetCenter=50)
         bbbb = cv2.bitwise_or(rb1, rb2)
+        bbbb = cv2.cvtColor(bbbb, cv2.COLOR_BGR2GRAY)
         contours, _ = cv2.findContours(bbbb, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
         contours = sorted(contours, key=cv2.contourArea, reverse=True)
         mark['coordinates'] = list(map(int, findContourCenter(contours[0])))
@@ -82,7 +84,7 @@ def solve(fileName='/solution/data.json'):
     imgScene = getScene()
     saveImage(imgScene)
     resultPath = initServer(imgScene, route, fileName)
-    driveByPath(resultPath, speed=60, show=False, debug=True)
+    driveByPath(resultPath, speed=120, show=False, debug=True)
 
     robot.stop()
     task.stop()
@@ -151,7 +153,7 @@ def initServer(img, route, fileName):
     robotPos, angle = detectRobot(img)
     graph, dictAruco = deserialize(fileName)
     graph = addArucos(graph, dictAruco, route)
-    # graph = addPoints(img, graph, route)
+    graph = addPoints(graph, route)
     path = getResultPositions(graph, robotPos, route)
 
     res = []

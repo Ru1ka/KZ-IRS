@@ -1,16 +1,13 @@
+from functools import lru_cache
 import math
+
 import numpy as np
 import cv2
-from functools import lru_cache
 
 @lru_cache(None)
 def getDistanceBetweenPoints(point1, point2):
+    if not point1 or not point2: return float('inf')
     return math.hypot(abs(point1[0] - point2[0]), abs(point1[1] - point2[1]))
-
-
-def minDistanceBetweenLines(line1, line2):
-    return min([getDistanceBetweenPoints(point1, point2) for point1 in line1 for point2 in line2])
-
 
 def rotateMatrix(matrix):
     num_rows = len(matrix)
@@ -21,16 +18,14 @@ def rotateMatrix(matrix):
             rotated_matrix[j][num_rows - 1 - i] = matrix[i][j]
     return rotated_matrix
 
-
-def angleBetweenPoints(point1, point2):
-    return math.atan2(point2[1] - point1[1], point2[0] - point1[0])
-
-def getPointOnSameLineOnSquare(vertexes, minDist, maxDist):
-    limitDist = minDist + (minDist + maxDist) // 2
-    for i, pos1 in enumerate(vertexes[:-1]):
-        for j, pos2 in enumerate(vertexes[i + 1:]):
-            if math.hypot(abs(pos1[0] - pos2[0]), abs(pos1[1] - pos2[1])) < limitDist:
-                return pos1, pos2
+def getErrorByPoints(point1, point2, commonPoint, reverse=True):
+    angle = getAngleBetweenLines((point1, commonPoint), (commonPoint, point2))
+    vectorAB = [(point1[axis] - commonPoint[axis]) for axis in range(2)]
+    vectorAC = [(point2[axis] - commonPoint[axis]) for axis in range(2)]
+    deviation = vectorAB[0] * vectorAC[1] - vectorAB[1] * vectorAC[0]
+    error = math.pi - angle if reverse else angle
+    if deviation < 0: error *= -1
+    return error
 
 def getNearestPoints(points):
     distances = []
@@ -54,7 +49,7 @@ def getAngleBetweenLines(line1, line2):
     return angle
 
 def angleToPoint(centralPoint, angle, d=1):
-    angle = math.radians(math.degrees(angle) + 180)
+    angle = math.radians(360 - (math.degrees(angle) + 90))
     x, y = centralPoint
     nx = x + d * math.cos(angle)
     ny = y + d * math.sin(angle)
@@ -69,7 +64,6 @@ def orderPoints(points):
     rect[1] = points[np.argmin(diff)]
     rect[3] = points[np.argmax(diff)]
     return rect
-
 
 def fourPointTransform(image, corners):
     rect = orderPoints(corners)

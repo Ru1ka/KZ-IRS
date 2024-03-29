@@ -234,7 +234,7 @@ def addArucos(points, arucos, mainPoints=[]):
         if arucoId in arUcoId2PointId:
             pointId = arUcoId2PointId[arucoId]
         else:
-            pointId = arucoId
+            pointId = "unused_" + arucoId
 
         # Строим перпендикуляр к дороге
         closestPoint = pointsList[0]

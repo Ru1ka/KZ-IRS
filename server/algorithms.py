@@ -76,8 +76,8 @@ def getAngleBetweenLineAndAxis(line):
 
 
 def getPosRightSideSegment(startPosLine, endPosLine, deviationLen=20):
-    if startPosLine[0] < 20 or endPosLine[0] < 20:
-        print(startPosLine, endPosLine)
+    # if startPosLine[0] < 20 or endPosLine[0] < 20:
+    #     print(startPosLine, endPosLine)
     vectorAB = [(endPosLine[axis] - startPosLine[axis]) for axis in range(2)]
     lengthVector = hypot(abs(vectorAB[0]), abs(vectorAB[1]))
     centerPoint = ((startPosLine[0] + endPosLine[0]) / 2, (startPosLine[1] + endPosLine[1]) / 2)
@@ -150,6 +150,7 @@ def perpendicularUnitVector(v1, v2):
     perpendicular_vector = [unit_vector[1], -unit_vector[0]]
 
     return perpendicular_vector
+
 
 def getDirection(points):
     for i in POINTS_COMB:

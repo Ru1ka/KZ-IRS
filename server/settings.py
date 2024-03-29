@@ -5,6 +5,7 @@ from pydantic import BaseSettings
 class Settings(BaseSettings):
     LOCAL: bool = False
     DEBUG: bool = False
+    IMAGEFILE: str = None
 
 
 @lru_cache()

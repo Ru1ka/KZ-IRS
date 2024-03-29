@@ -75,33 +75,33 @@ class Point:
 
     @staticmethod
     def from_dict(data):
-        point_id = data["id"]
+        point_id = str(data["id"])
         pos = data["pos"]
         line_id = data["line"]
         is_crossroad = data["isCrossroad"]
         is_aruco = data["isAruco"]
         aruco_angle = data["arucoAngle"]
         is_end = data["isEnd"]
-        neighbour_ids = data["neighbours"]
+        neighbour_ids = [str(i) for i in data["neighbours"]]
 
-        point = Point(point_id, pos, None, is_crossroad, is_aruco, aruco_angle, neighbour_ids)
+        point = Point(point_id, tuple(pos), None, is_crossroad, is_aruco, aruco_angle, neighbour_ids)
 
         # if line:
         #     line.addPoint(point)
         return point, line_id
     
 
-def serialize(points, filename="data.json"):
+def serialize(points, dictAruco, filename="data.json"):
     points = points.values()
-    res = {"points": [], "lines": []}
+    res = {"points": [], "lines": [], "dictAruco": dictAruco}
     lines = set()
     for i in points:
         res["points"] += [i.to_dict()]
-        lines.add(i.line)
+        if i.line:
+            lines.add(i.line)
 
     for i in lines:
         res["lines"] += [i.to_dict()]
-    print(res)
     with open(filename, 'w') as json_file:
         json.dump(res, json_file, indent=4)
 
@@ -114,27 +114,45 @@ def deserialize(filename):
         for i in data["points"]:
             point, line_id = Point.from_dict(i)
             lines_data[line_id] = lines_data.get(line_id, []) + [point]
+            points[point.id] = point
 
         for i in data["lines"]:
             Line.from_dict(i, lines_data)
-        return points
+        
+        dictAruco = data["dictAruco"]
+        for i in dictAruco.values():
+            i[0] = tuple(i[0])
+            for j in range(len(i[1])):
+                i[1][j] = tuple(i[1][j])
+
+        
+        for i in points.values():
+            new_neigh = []
+            for j in range(len(i.neighbours)):
+                try:
+                    new_neigh += [points[i.neighbours[j]]]
+                except KeyError:
+                    pass
+            i.neighbours = new_neigh
+
+        return points, dictAruco
     
 
-if __name__ == "__main__":
-    line1 = Line(1)
-    line2 = Line(2)
-    point1 = Point(1, (0, 0), line1)
-    point2 = Point(2, (1, 1), line1)
-    point3 = Point(3, (2, 2), line2)
+# if __name__ == "__main__":
+#     line1 = Line(1)
+#     line2 = Line(2)
+#     point1 = Point(1, (0, 0), line1)
+#     point2 = Point(2, (1, 1), line1)
+#     point3 = Point(3, (2, 2))
 
-    # Добавление точек к линиям
-    line1.addPoint(point1)
-    line1.addPoint(point2)
-    line2.addPoint(point3)
+#     # Добавление точек к линиям
+#     line1.addPoint(point1)
+#     line1.addPoint(point2)
+#     line2.addPoint(point3)
 
-    # Сериализация в JSON
-    serialize({point1.id: point1, point2.id: point2, point3.id: point3}, "data.json")
+#     # Сериализация в JSON
+#     serialize({point1.id: point1, point2.id: point2, point3.id: point3}, "data.json")
 
-    # Десериализация из JSON
-    res = deserialize("data.json")
-    print(res)
+#     # Десериализация из JSON
+#     res = deserialize("data.json")
+

@@ -200,6 +200,51 @@ def detectRobot(img, show=False):
         showImage(imgShow)
     return centerRobot, directionPoint
 
+def binOriPonImage(img, cntRobBin):
+    imgHSV = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+
+    HSVMin = (33, 38, 62)
+    HSVMax = (202, 255, 228)  # - 170
+    imgBinary1 = cv2.inRange(imgHSV[:170], HSVMin, HSVMax)
+
+    HSVMin = (16, 31, 62)
+    HSVMax = (228, 220, 173)  # 170 - 310
+    imgBinary2 = cv2.inRange(imgHSV[170:310], HSVMin, HSVMax)
+
+    HSVMin = (39, 34, 52)
+    HSVMax = (185, 138, 110)  # 310 - 380
+    imgBinary3 = cv2.inRange(imgHSV[310:380], HSVMin, HSVMax)
+
+    HSVMin = (27, 52, 32)
+    HSVMax = (190, 164, 94)  # 380 -
+    imgBinary4 = cv2.inRange(imgHSV[380:], HSVMin, HSVMax)
+
+    imgBinary = np.concatenate((imgBinary1, imgBinary2, imgBinary3, imgBinary4), axis=0)
+    #imgBinary = cv2.bitwise_or(imgBinary, imgBinary, cv2.bitwise_not(cntRobBin, cntRobBin))
+    return imgBinary
+
+
+def binCenRobImage(img):
+    imgHSV = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+
+    HSVMin = (41, 99, 38)
+    HSVMax = (157, 214, 84)  # - 170
+    imgBinary1 = cv2.inRange(imgHSV[:170], HSVMin, HSVMax)
+
+    HSVMin = (52, 89, 32)
+    HSVMax = (147, 179, 79)  # 170 - 310
+    imgBinary2 = cv2.inRange(imgHSV[170:310], HSVMin, HSVMax)
+
+    HSVMin = (44, 107, 31)
+    HSVMax = (151, 200, 100)  # 310 - 380
+    imgBinary3 = cv2.inRange(imgHSV[310:380], HSVMin, HSVMax)
+
+    HSVMin = (96, 156, 17)
+    HSVMax = (145, 255, 38)  # 380 -
+    imgBinary4 = cv2.inRange(imgHSV[380:], HSVMin, HSVMax)
+
+    imgBinary = np.concatenate((imgBinary1, imgBinary2, imgBinary3, imgBinary4), axis=0)
+    return imgBinary
 
 def showImage(img):
     while cv2.waitKey(1) != 27: cv2.imshow('Image', img)

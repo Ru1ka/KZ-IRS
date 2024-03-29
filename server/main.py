@@ -216,13 +216,13 @@ def debugLocal():
         # {"name":"p_9","marker_id":"247"},
         # {"name":"p_10","marker_id":"343"},
         # {"name":"p_11","marker_id":"102"},
-        # {"name":"p_12","marker_id":"13"},
+        {"name":"p_12","marker_id":"13"},
         # {"name":"p_13","marker_id":"2"},
         # {"name":"p_14","marker_id":"115"},
         # {"name":"p_15","marker_id":"33"},
         # {"name":"p_16","marker_id":"44"},
         # {"name":"p_17","marker_id":"143"},
-        # {"name":"p_18","marker_id":"79"},
+        {"name":"p_18","marker_id":"79"},
         # {"name":"p_19","marker_id":"118"},
     ]
     # shuffle(route)
@@ -282,13 +282,13 @@ def InitLocal(filename="data.json"):
         # {"name":"p_9","marker_id":"247"},
         # {"name":"p_10","marker_id":"343"},
         # {"name":"p_11","marker_id":"102"},
-        # {"name":"p_12","marker_id":"13"},
+        {"name":"p_12","marker_id":"13"},
         # {"name":"p_13","marker_id":"2"},
         # {"name":"p_14","marker_id":"115"},
         # {"name":"p_15","marker_id":"33"},
         # {"name":"p_16","marker_id":"44"},
         # {"name":"p_17","marker_id":"143"},
-        # {"name":"p_18","marker_id":"79"},
+        {"name":"p_18","marker_id":"79"},
         # {"name":"p_19","marker_id":"118"},
     ]
     img = cv2.imread(settings().IMAGEFILE)

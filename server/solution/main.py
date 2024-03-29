@@ -10,7 +10,7 @@ from algorithms import getRoadLines, extendLines, getResultPositions
 from funcs import getDistanceBetweenPoints, getErrorByPoints, angleToPoint
 import show
 import saveImg as svImg
-from settings import settings
+# from settings import settings
 
 import time
 
@@ -21,8 +21,11 @@ from const import ConstPlenty
 from vision import detectRobot
 
 const = ConstPlenty()
+LOCAL = True
+DEBUG = True
+IMAGE_FILE = "images/88.png"
 
-if not settings().LOCAL and not settings().DEBUG:
+if not LOCAL and not DEBUG:
     from nto.final import Task
     task = Task()
 
@@ -50,7 +53,6 @@ def solve(fileName='data.json'):
     route = task.getTask()
     imgScene = getScene()
     saveImage(imgScene)
-    while True: showImage(imgScene)
     resultPath = initServer(imgScene, route, fileName)
     print(resultPath)
     driveByPath(resultPath, speed=60, show=False, debug=True)
@@ -84,7 +86,7 @@ def driveForwardToPoint(posPoint, speed, show=False, debug=False):
         if not centerRobot or not directionPoint: continue
         distance = getDistanceBetweenPoints(centerRobot, posPoint)
         if debug: print(f'[DISTANCE]: {distance}')
-        if distance < 7: break
+        if distance < 10: break
         error = getErrorByPoints(directionPoint, posPoint, centerRobot)
         if debug: print(f'[ERROR ANGLE]: {error}, {math.degrees(error)}')
         robot.angleRegulator(error, speed)
@@ -93,13 +95,13 @@ def driveForwardToPoint(posPoint, speed, show=False, debug=False):
             cv2.line(imgShow, list(map(int, directionPoint)), list(map(int, centerRobot)), (0, 0, 255), 2)
             cv2.line(imgShow, list(map(int, centerRobot)), list(map(int, posPoint)), (255, 0, 0), 2)
             showImage(imgShow)
-    robot.bstop()
+    robot.stop()
 
 def driveRotateToAngle(anglePoint, angleLimit, show=False, debug=False):
     imgScene = getScene()
     centerRobot, directionPoint = detectRobot(imgScene, show=show)
     directionArucoPoint = angleToPoint(centerRobot, anglePoint, d=35)
-    flag = True
+    robot.resetRegulator()
     while True:
         imgScene = getScene()
         centerRobot, directionPoint = detectRobot(imgScene)
@@ -107,32 +109,13 @@ def driveRotateToAngle(anglePoint, angleLimit, show=False, debug=False):
         error = getErrorByPoints(directionPoint, directionArucoPoint, centerRobot)
         if debug: print(f'[ERROR ANGLE]: {error}')
         if abs(error) < math.radians(angleLimit): break
-        if error > 0:
-            robot.turnRight(40)
-            robot.turnLeft(-38)
-            flag = True
-        else:
-            robot.turnRight(-40)
-            robot.turnLeft(38)
-            flag = False
+        robot.angleRegulator(error, 0, kp=4, kd=10)
         if show:
             imgShow = imgScene.copy()
             cv2.line(imgShow, list(map(int, directionPoint)), list(map(int, centerRobot)), (0, 0, 255), 2)
             cv2.line(imgShow, list(map(int, centerRobot)), list(map(int, directionArucoPoint)), (255, 0, 0), 2)
             cv2.circle(imgShow, list(map(int, directionArucoPoint)), 3, (0, 255, 0), -1)
             showImage(imgShow)
-    if flag:
-        robot.turnRight(-40)
-        robot.turnLeft(38)
-    else:
-        robot.turnRight(40)
-        robot.turnLeft(-38)
-    lastTime = time.time() + 0.07
-    while lastTime > time.time(): pass
-    robot.turnRight(120)
-    robot.turnLeft(120)
-    lastTime = time.time() + 0.06
-    while lastTime > time.time(): pass
     robot.stop()
 
 def driveByPath(path, speed, show=False, debug=False):
@@ -148,18 +131,15 @@ def driveByPath(path, speed, show=False, debug=False):
         if debug: print('FORWARD')
         driveForwardToPoint(posPoint, speed, show, debug)
         if anglePoint is None: continue
-        time.sleep(2)
+        time.sleep(1)
         if debug: print('ROTATE')
         driveRotateToAngle(anglePoint, angleLimit=7, show=show, debug=debug)
-        if debug: print('DONE')
-        time.sleep(2)
+        time.sleep(1)
         if debug: print('ROTATE 360')
         robot.rotate360()
-        robot.bstop()
-        time.sleep(2)
 
 def debugLocal():
-    img = cv2.imread(settings().IMAGEFILE)
+    img = cv2.imread(IMAGE_FILE)
 
     # route = ...  # загрузить из task
     route = [
@@ -214,7 +194,7 @@ def debugLocal():
     serialize(graph, dictAruco)
 
     # -----////----- #
-    if settings().DEBUG:
+    if DEBUG:
         graph = addArucos(graph, dictAruco, route)
         show.showGraph(img, graph)
         # graph = addPoints(img, graph, route)
@@ -251,7 +231,7 @@ def InitLocal(filename="data.json"):
         {"name":"p_12","marker_id":"13"},
         # {"name":"p_19","marker_id":"118"},
     ]
-    img = cv2.imread(settings().IMAGEFILE)
+    img = cv2.imread(IMAGE_FILE)
     robotPos = (0, 0)
     graph, dictAruco = deserialize(filename)
     graph = addArucos(graph, dictAruco, route)
@@ -263,10 +243,10 @@ def InitLocal(filename="data.json"):
     return path
 
 if __name__ == '__main__':
-    if settings().DEBUG:
+    if DEBUG:
         debugLocal()
     else:
-        if settings().LOCAL:
+        if LOCAL:
             InitLocal()
         else:
             solve()

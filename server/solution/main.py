@@ -23,7 +23,7 @@ from vision import detectRobot
 const = ConstPlenty()
 LOCAL = False
 DEBUG = False
-IMAGE_FILE = "images/88.png"
+IMAGE_FILE = "88.png"
 
 if not LOCAL and not DEBUG:
     from nto.final import Task
@@ -50,8 +50,9 @@ def getScene():
 def solve(fileName='data.json'):
     task.start()
 
-    route = eval(task.getTask())
-    imgScene = getScene()
+    
+    # route = [{'name': 'p_2', 'marker_id': '2'}, {'name': 'p_3', 'marker_id': '247'}, {'name': 'p_6', 'marker_id': '215'}, {'name': 'p_7', 'marker_id': '97'}]
+    imgScene = cv2.imread(IMAGE_FILE)
     saveImage(imgScene)
     resultPath = initServer(imgScene, route, fileName)
     print(resultPath)
@@ -59,26 +60,6 @@ def solve(fileName='data.json'):
 
     robot.stop()
     task.stop()
-
-def initServer(img, route, fileName):
-    robotPos, angle = detectRobot(img)
-    graph, dictAruco = deserialize(fileName)
-    graph = addArucos(graph, dictAruco, route)
-    print(list(graph.keys()))
-    show.showGraph(img, graph)
-    svImg.saveGraph(img, graph)
-    #graaph = addPoints(img, graph, route)
-    svImg.saveGraph(img, graph)
-    path = getResultPositions(graph, robotPos, route)
-
-    res = []
-    for point in path:
-        if point.isAruco:
-            res += [(point.pos, point.angle)]
-        else:
-            res += [(point.pos, None)]
-
-    return res
 
 def driveForwardToPoint(posPoint, speed, show=False, debug=False):
     robot.resetRegulator()
@@ -140,10 +121,29 @@ def driveByPath(path, speed, show=False, debug=False):
         if debug: print('ROTATE 360')
         robot.rotate360()
 
+def initServer(img, route, fileName):
+    robotPos, angle = detectRobot(img)
+    graph, dictAruco = deserialize(fileName)
+    graph = addArucos(graph, dictAruco, route)
+    show.showGraph(img, graph)
+    # graph = addPoints(img, graph, route)
+    show.showGraph(img, graph)
+    path = getResultPositions(graph, robotPos, route)
+    show.showResult(img, path, route, dictAruco)
+
+    res = []
+    for point in path:
+        if point.isAruco:
+            res += [(point.pos, point.arucoAngle)]
+        else:
+            res += [(point.pos, None)]
+
+    return res
+
 def debugLocal():
     img = cv2.imread('Camera.png')
 
-    # route = ...  # загрузить из task
+    # route = ...  # загрузить из tasks
     route = [
         {"name":"p_1","marker_id":"125"},
         {"name":"p_2","marker_id":"229"},

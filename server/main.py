@@ -181,8 +181,7 @@ def solve(filename="data.json"):
     route = task.getTask()
     imgScene = cam.read()
     saveImage(imgScene)
-    route = None
-    resultPath = getResultPath(imgScene, route, show=True)
+    resultPath = initServer(imgScene, route)
     print(resultPath)
     driveToArucoMarkers(resultPath, speed=60, show=True)
     #task.stop()
@@ -197,7 +196,14 @@ def initServer(img, route, filename="data.json"):
     svImg.saveGraph(graph)
     path = getResultPositions(graph, robotPos, route)
 
-    return path
+    res = []
+    for point in path:
+        if point.isAruco:
+            res += [(point.pos, point.angle)]
+        else:
+            res += [(point.pos, None)]
+
+    return res
 
 def debugLocal():
     img = cv2.imread(settings().IMAGEFILE)
@@ -223,6 +229,7 @@ def debugLocal():
         # {"name":"p_16","marker_id":"44"},
         # {"name":"p_17","marker_id":"143"},
         {"name":"p_18","marker_id":"79"},
+        {"name":"p_12","marker_id":"13"},
         # {"name":"p_19","marker_id":"118"},
     ]
     # shuffle(route)
@@ -289,6 +296,7 @@ def InitLocal(filename="data.json"):
         # {"name":"p_16","marker_id":"44"},
         # {"name":"p_17","marker_id":"143"},
         {"name":"p_18","marker_id":"79"},
+        {"name":"p_12","marker_id":"13"},
         # {"name":"p_19","marker_id":"118"},
     ]
     img = cv2.imread(settings().IMAGEFILE)

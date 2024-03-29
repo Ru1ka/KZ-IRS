@@ -2,12 +2,6 @@ from funcs import getNearestPoints
 import numpy as np
 import cv2
 
-def rotateImage(image, angle):
-    image_center = tuple(np.array(image.shape[1::-1]) / 2)
-    rot_mat = cv2.getRotationMatrix2D(image_center, angle, 1.0)
-    result = cv2.warpAffine(image, rot_mat, image.shape[1::-1], flags=cv2.INTER_LINEAR)
-    return result
-
 def findContourCenter(cnt):
     cx, cy = None, None
     moment = cv2.moments(cnt)
@@ -16,13 +10,12 @@ def findContourCenter(cnt):
         cy = int(moment['m01'] / moment['m00'])
     return (cx, cy)
 
-def adaptiveThresholdImage(imgGray, blockSize, C):
+def adaptiveThresholdImage(imgGray, blockSize, C, sizeBlur):
     imgBinary = cv2.adaptiveThreshold(imgGray, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, blockSize, C)
-    kernel = np.ones((9, 9), np.uint8)
-    imgBinary = cv2.morphologyEx(imgBinary, cv2.MORPH_CLOSE, kernel)
+    imgBinary = cv2.blur(imgBinary, (sizeBlur, sizeBlur))
     return imgBinary
 
-def binCenRobImage(img):
+def binaryCenterRobotImage(img):
     imgHSV = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 
     HSVMin = (41, 99, 38)
@@ -44,7 +37,7 @@ def binCenRobImage(img):
     imgBinary = np.concatenate((imgBinary1, imgBinary2, imgBinary3, imgBinary4), axis=0)
     return imgBinary
 
-def binOriPonImage(img, cntRobBin):
+def binaryOrientationPointsImage(img):
     imgHSV = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 
     HSVMin = (33, 38, 62)
@@ -64,38 +57,37 @@ def binOriPonImage(img, cntRobBin):
     imgBinary4 = cv2.inRange(imgHSV[380:], HSVMin, HSVMax)
 
     imgBinary = np.concatenate((imgBinary1, imgBinary2, imgBinary3, imgBinary4), axis=0)
-    #imgBinary = cv2.bitwise_or(imgBinary, imgBinary, cv2.bitwise_not(cntRobBin, cntRobBin))
     return imgBinary
 
-def getCenterRobot(img, show=False):
-    imgBinary = binCenRobImage(img)
-    if show:
-        cv2.imshow('Bin', imgBinary)
-        cv2.waitKey(1)
+def getRobotCenterContour(imgBinary):
     contours, _ = cv2.findContours(imgBinary, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
     contours = sorted(contours, key=cv2.contourArea, reverse=True)
     if not contours: return None
     centerRobot = findContourCenter(contours[0])
-    return imgBinary, centerRobot
+    return centerRobot
 
-def getOrientationPoints(img, cntRobBin, show=False):
-    imgBinary = binOriPonImage(img, cntRobBin)
-
-    if show:
-        cv2.imshow('Bin2', imgBinary)
-        cv2.waitKey(1)
+def getOrientationPointsContour(imgBinary):
     contours, _ = cv2.findContours(imgBinary, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
     if not contours: return None
     contours = sorted(contours, key=cv2.contourArea, reverse=True)
-    directionPoints = [findContourCenter(cnt) for cnt in contours]
-    directionPoints = directionPoints[:4]
-    return directionPoints
+    orientationPoints = [findContourCenter(cnt) for cnt in contours]
+    orientationPoints = orientationPoints[:4]
+    return orientationPoints
+
+def getRobotPoints(img, show=False):
+    imgBinaryCenter = binaryCenterRobotImage(img)
+    imgBinaryOrientation = binaryOrientationPointsImage(img)
+    imgBinaryOrientation = cv2.bitwise_and(imgBinaryOrientation, imgBinaryOrientation, mask=cv2.bitwise_not(imgBinaryCenter))
+    if show:
+        showImage(imgBinaryCenter)
+        showImage(imgBinaryOrientation)
+    centerRobot = getRobotCenterContour(imgBinaryCenter)
+    orientationPoints = getOrientationPointsContour(imgBinaryOrientation)
+    return centerRobot, orientationPoints
 
 def detectRobot(img, show=False):
-    cntRobBin, centerRobot = getCenterRobot(img, show)
-    if not centerRobot: return None, None
-    orientationPoints = getOrientationPoints(img, cntRobBin, show)
-    if not orientationPoints: return centerRobot, None
+    centerRobot, orientationPoints = getRobotPoints(img, show=show)
+    if not centerRobot or not orientationPoints: return None
     nearestPoints = getNearestPoints(orientationPoints)
     directionPoint = ((nearestPoints[0][0] + nearestPoints[1][0]) // 2,
                       (nearestPoints[0][1] + nearestPoints[1][1]) // 2)

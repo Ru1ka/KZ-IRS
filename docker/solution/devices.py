@@ -1,6 +1,7 @@
 import socket
 import cv2
 import math
+import time
 
 class Robot:
     def __init__(self, ip, port):
@@ -23,6 +24,13 @@ class Robot:
         self.oldError = error
         self.turnRight(speed + u)
         self.turnLeft(speed - u)
+
+    def rotate360(self, speedR=60, speedL=-55, timer=2.5):
+        lastTime = time.time()
+        self.turnRight(speedR)
+        self.turnLeft(speedL)
+        while lastTime + timer > time.time(): pass
+        self.stop()
 
     def turnRight(self, speed):
         command = f'0:{speed}'
@@ -63,7 +71,9 @@ class Camera:
         self.cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*"MJPG"))
 
     def read(self):
-        success, img = self.cap.read()
+        #success, img = self.cap.read()
+        success = True
+        img = cv2.imread('../../distortion/dataset/arucos/68.png')
         return img if success else None
 
     def release(self):

@@ -23,7 +23,7 @@ from vision import detectRobot
 const = ConstPlenty()
 LOCAL = True
 DEBUG = True
-IMAGE_FILE = "images/88.png"
+IMAGE_FILE = "88.png"
 
 if not LOCAL and not DEBUG:
     from nto.final import Task

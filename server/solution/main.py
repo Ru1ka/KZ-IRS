@@ -47,15 +47,14 @@ def showImage(img, scale=2, winName='ImageScene'):
 def getScene():
     return getFullScene(cam1.read(), cam2.read())
 
-def solve(fileName='data.json'):
+def solve(fileName='/solution/data.json'):
     task.start()
 
-    
+    route = eval(task.getTask())[1:]
     # route = [{'name': 'p_2', 'marker_id': '2'}, {'name': 'p_3', 'marker_id': '247'}, {'name': 'p_6', 'marker_id': '215'}, {'name': 'p_7', 'marker_id': '97'}]
-    imgScene = cv2.imread(IMAGE_FILE)
+    imgScene = getScene()
     saveImage(imgScene)
     resultPath = initServer(imgScene, route, fileName)
-    print(resultPath)
     driveByPath(resultPath, speed=60, show=False, debug=True)
 
     robot.stop()
@@ -125,11 +124,8 @@ def initServer(img, route, fileName):
     robotPos, angle = detectRobot(img)
     graph, dictAruco = deserialize(fileName)
     graph = addArucos(graph, dictAruco, route)
-    show.showGraph(img, graph)
     # graph = addPoints(img, graph, route)
-    show.showGraph(img, graph)
     path = getResultPositions(graph, robotPos, route)
-    show.showResult(img, path, route, dictAruco)
 
     res = []
     for point in path:
@@ -179,17 +175,13 @@ def debugLocal():
     robotPos = (0, 0)
     # Сборка и продление линий дороги
     roadLines = getRoadLines(markupArray)
-    show.showLines(img, roadLines)
     extendedRoadLines = extendLines(roadLines)
-    show.showLines(img, extendedRoadLines)
 
     # Сборка графа
     graph = getGraph(extendedRoadLines, distCrossroads=40)
-    show.showGraph(img, graph)
     
     graph = refactorGraph(graph)  # Двухстороннее движение
     graph = deletePoints(graph, 270, 300)
-    show.showGraph(img, graph)
 
     dictAruco = detectAruco(img, markerCorners, markerIds, 100)
     
@@ -198,12 +190,10 @@ def debugLocal():
     # -----////----- #
     if DEBUG:
         graph = addArucos(graph, dictAruco, route)
-        show.showGraph(img, graph)
         # graph = addPoints(img, graph, route)
         # show.showGraph(img, graph)
 
         path = getResultPositions(graph, robotPos, route)
-        show.showResult(img, path, route, dictAruco)
         print(len(path))
      # -----////----- #
 
@@ -237,11 +227,8 @@ def InitLocal(filename="data.json"):
     robotPos = (0, 0)
     graph, dictAruco = deserialize(filename)
     graph = addArucos(graph, dictAruco, route)
-    show.showGraph(img, graph)
     graph = addPoints(img, graph, route)
-    show.showGraph(img, graph)
     path = getResultPositions(graph, robotPos, route)
-    show.showResult(img, path, route, dictAruco)
     return path
 
 if __name__ == '__main__':

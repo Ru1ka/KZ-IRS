@@ -21,8 +21,8 @@ from const import ConstPlenty
 from vision import detectRobot
 
 const = ConstPlenty()
-LOCAL = True
-DEBUG = True
+LOCAL = False
+DEBUG = False
 IMAGE_FILE = "images/88.png"
 
 if not LOCAL and not DEBUG:
@@ -30,8 +30,8 @@ if not LOCAL and not DEBUG:
     task = Task()
 
     robot = Robot('10.128.73.116', 5005)
-    cam1 = Camera(0, task, const.cam1.matrix, const.cam1.distortion)
-    cam2 = Camera(1, task, const.cam2.matrix, const.cam2.distortion)
+    cam1 = Camera('http://student:nto2024@10.128.73.31/mjpg/video.mjpg', const.cam1.matrix, const.cam1.distortion)
+    cam2 = Camera('http://student:nto2024@10.128.73.38/mjpg/video.mjpg', const.cam2.matrix, const.cam2.distortion)
 
 def saveImage(img, fileName='Camera.png'):
     cv2.imwrite(os.path.join(const.path.images, fileName), img)
@@ -64,6 +64,7 @@ def initServer(img, route, fileName):
     robotPos, angle = detectRobot(img)
     graph, dictAruco = deserialize(fileName)
     graph = addArucos(graph, dictAruco, route)
+    show.showGraph(img, graph)
     svImg.saveGraph(img, graph)
     #graaph = addPoints(img, graph, route)
     svImg.saveGraph(img, graph)
@@ -139,7 +140,7 @@ def driveByPath(path, speed, show=False, debug=False):
         robot.rotate360()
 
 def debugLocal():
-    img = cv2.imread(IMAGE_FILE)
+    img = cv2.imread('Camera.png')
 
     # route = ...  # загрузить из task
     route = [
@@ -148,21 +149,21 @@ def debugLocal():
         {"name":"p_3","marker_id":"97"},
         {"name":"p_4","marker_id":"205"},
         {"name":"p_5","marker_id":"21"},
-        # {"name":"p_6","marker_id":"61"},
-        # {"name":"p_7","marker_id":"215"},
-        # {"name":"p_8","marker_id":"191"},
-        # {"name":"p_9","marker_id":"247"},
-        # {"name":"p_10","marker_id":"343"},
-        # {"name":"p_11","marker_id":"102"},
+        {"name":"p_6","marker_id":"61"},
+        {"name":"p_7","marker_id":"215"},
+        {"name":"p_8","marker_id":"191"},
+        {"name":"p_9","marker_id":"247"},
+        {"name":"p_10","marker_id":"343"},
+        {"name":"p_11","marker_id":"102"},
         {"name":"p_12","marker_id":"13"},
-        # {"name":"p_13","marker_id":"2"},
-        # {"name":"p_14","marker_id":"115"},
-        # {"name":"p_15","marker_id":"33"},
-        # {"name":"p_16","marker_id":"44"},
-        # {"name":"p_17","marker_id":"143"},
+        {"name":"p_13","marker_id":"2"},
+        {"name":"p_14","marker_id":"115"},
+        {"name":"p_15","marker_id":"33"},
+        {"name":"p_16","marker_id":"44"},
+        {"name":"p_17","marker_id":"143"},
         {"name":"p_18","marker_id":"79"},
         {"name":"p_12","marker_id":"13"},
-        # {"name":"p_19","marker_id":"118"},
+        {"name":"p_19","marker_id":"118"},
     ]
     # shuffle(route)
     # route *= 3
@@ -189,7 +190,7 @@ def debugLocal():
     graph = deletePoints(graph, 270, 300)
     show.showGraph(img, graph)
 
-    dictAruco = detectAruco(img, markerCorners, markerIds, 90)
+    dictAruco = detectAruco(img, markerCorners, markerIds, 100)
     
     serialize(graph, dictAruco)
 

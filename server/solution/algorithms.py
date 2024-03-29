@@ -126,6 +126,7 @@ def getResultPositions(graph, robotPos, mainPoints):
     last = start
     resultPositions = [start]
     for point in mainPoints:
+        print(point, graph)
         point = graph[point]
         path = findPathBFS(last, point)
         last = point

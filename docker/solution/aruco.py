@@ -41,45 +41,49 @@ class ArucoDetector:
                 markerIds.append(rawMarkerIds[i])
         return markerCorners, markerIds
 
-def findArucoMarkers(img, size=3, timer=3, show=False):
-    detector = ArucoDetector(size, ALL_ARUCO_KEYS)
-    imgGray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    imgBinary = cv2.adaptiveThreshold(imgGray, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 41, 17)
+def showDetectedMarkers(img, markerCorners, markerIds):
+    imgShow = img.copy()
+    aruco.drawDetectedMarkers(imgShow, markerCorners)
+    for cnr, id in zip(markerCorners, markerIds):
+        pos = list(map(int, list(cnr[0][0])))
+        cv2.putText(imgShow, str(id), pos, cv2.FONT_HERSHEY_COMPLEX, 1, (0, 0, 255), 2)
+    showImage(imgShow)
+    showImage(cv2.cvtColor(imgShow, cv2.COLOR_BGR2GRAY))
+
+def findArucoMarkers(camera, size=3, timer=3, blockSize=41, C=17, sizeBlur=3, show=False):
+    detector = ArucoDetector(size, whitelist=ALL_ARUCO_KEYS)
     lastTime = time.time()
     markerDict = {}
     while lastTime + timer > time.time():
+        imgGray = cv2.cvtColor(camera.read(), cv2.COLOR_BGR2GRAY)
+        imgBinary = cv2.adaptiveThreshold(imgGray, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, blockSize, C)
+        imgBinary = cv2.blur(imgBinary, (sizeBlur, sizeBlur))
         markerCorners, markerIds = detector.detectMarkers(imgBinary)
-        for cnr, id in zip(markerCorners, markerIds):
-            markerDict[id[0]] = cnr
+        for cnr, id in zip(markerCorners, markerIds): markerDict[id[0]] = cnr
     markerCorners, markerIds = list(markerDict.values()), list(markerDict.keys())
     if show:
-        imgShow = img.copy()
-        aruco.drawDetectedMarkers(imgShow, markerCorners)
-        for cnr, id in zip(markerCorners, markerIds):
-            pos = list(map(int, list(cnr[0][0])))
-            cv2.putText(imgShow, str(id), pos, cv2.FONT_HERSHEY_COMPLEX, 1, (0, 0, 255), 2)
-        showImage(cv2.cvtColor(imgShow, cv2.COLOR_BGR2GRAY))
+        showImage(imgBinary)
+        showDetectedMarkers(camera.read(), markerCorners, markerIds)
     return markerCorners, markerIds
 
-def detectAruco(img, markerCorners, markerIds, threshold=50, size=3, show=False):
-    result = {}
+def detectAruco(img, markerCorners, markerIds, threshold, size=3):
+    resultArucos = {}
     for cnr, id in zip(markerCorners, markerIds):
         corners = np.array(list(map(np.array, cnr[0])))
         imgWrapped = fourPointTransform(img, corners)
         imgWGray = cv2.cvtColor(imgWrapped, cv2.COLOR_BGR2GRAY)
         matrix = getMatrixFromAruco(imgWGray, threshold, size)
-        center_x = sum([i[0] for i in corners]) / 4
-        center_y = sum([i[1] for i in corners]) / 4
+        centerX = sum([i[0] for i in corners]) / 4
+        centerY = sum([i[1] for i in corners]) / 4
         a, b = list(sorted(corners, key=lambda x: x[1]))[:2]
         if b[0] < a[0]:
             c = [a[0] + 5, a[1]]
-            angle = math.degrees(getAngleBetweenLines([b, a], [a, c]))
+            angle = 1
         else:
             c = [a[0] - 5, a[1]]
-            angle = -math.degrees(getAngleBetweenLines([b, a], [a, c]))
-        corners.sort()
-        n = 0
-        while True:
+            angle = -1
+        angle *= math.degrees(getAngleBetweenLines([b, a], [a, c]))
+        for n in range(5):
             markerId = 0
             for i in range(9):
                 x = i % 3
@@ -87,18 +91,13 @@ def detectAruco(img, markerCorners, markerIds, threshold=50, size=3, show=False)
                 markerId += matrix[y][x] * 2 ** (8 - i)
             if markerId in ALL_ARUCO_KEYS:
                 angle += n * 90
-                if angle < 0:
-                    angle += 360
-                result[f"p_{id}"] = ((center_x, center_y), math.radians(angle))
+                if angle < 0: angle += 360
+                resultArucos[f"p_{id}"] = ((centerX, centerY), math.radians(angle))
                 break
-            else:
-                n += 1
-                matrix = rotateMatrix(matrix)
-            if n >= 4: break
-        if show: cv2.imshow('Aruco', imgWrapped)
-    return result
+            matrix = rotateMatrix(matrix)
+    return resultArucos
 
-def getMatrixFromAruco(imgGray, threshold, sizeAruco, show=False):
+def getMatrixFromAruco(imgGray, threshold, sizeAruco):
     height, width = imgGray.shape[:2]
     stepH, stepW = height // (sizeAruco + 1), width // (sizeAruco + 1)
     matrix = [[0] * sizeAruco for _ in range(sizeAruco)]
@@ -107,9 +106,6 @@ def getMatrixFromAruco(imgGray, threshold, sizeAruco, show=False):
             y = stepH * i
             x = stepW * j
             matrix[i - 1][j - 1] = int(imgGray[y][x] > threshold)
-            if show:
-                cv2.circle(imgGray, (x, y), 5, (255, 255, 255), -1)
-                cv2.circle(imgGray, (x, y), 3, (0, 0, 0), -1)
     return matrix
 
 

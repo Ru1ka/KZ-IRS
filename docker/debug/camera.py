@@ -33,9 +33,11 @@ class Camera:
         self.setDefaultSettings()
         self.cap.release()
 
+def showImage(img, winName='Image'):
+    while cv2.waitKey(1) != 27: cv2.imshow(winName, img)
+
 def main():
     cam = Camera(0)
-    cam.setDefaultSettings()
     import time
     lastTime = time.time() + 5
     flag = True

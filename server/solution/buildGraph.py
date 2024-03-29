@@ -225,7 +225,7 @@ def addArucos(points, arucos, mainPoints=[]):
     for point in mainPoints:
         if "marker_id" in point:
             arUcoId2PointId[f'p_{point["marker_id"]}'] = point["name"]
-
+    print(arUcoId2PointId)
     counter = 0
     pointsList = list(points.values())
     for arucoId, aruco in arucos.items():

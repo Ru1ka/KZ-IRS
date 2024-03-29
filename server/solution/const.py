@@ -9,7 +9,7 @@ class Camera:
 
 class Path:
     def __init__(self):
-        self.images = os.path.join('solution', 'images')
+        self.images = os.path.join('', 'images')
 
 class ConstPlenty:
     def __init__(self):

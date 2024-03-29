@@ -62,7 +62,7 @@ def findArucoMarkers(img, size=3, timer=3, show=False):
         showImage(cv2.cvtColor(imgShow, cv2.COLOR_BGR2GRAY))
     return markerCorners, markerIds
 
-def detectAruco(img, markerCorners, markerIds, threshold=50, size=3, show=False):
+def detectAruco(img, markerCorners, markerIds, threshold, size=3, show=False):
     result = {}
     for cnr, id in zip(markerCorners, markerIds):
         corners = np.array(list(map(np.array, cnr[0])))

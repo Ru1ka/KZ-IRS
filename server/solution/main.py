@@ -4,7 +4,7 @@ from vision import *
 # from detectAruco import detectAruco
 from graph import serialize, deserialize
 from aruco import findArucoMarkers, detectAruco
-from vision import getMarkupPositions
+from vision import getMarkupPositions, findContourCenter
 from buildGraph import getGraph, refactorGraph, addArucos, deletePoints, addPoints
 from algorithms import getRoadLines, extendLines, getResultPositions
 from funcs import getDistanceBetweenPoints, getErrorByPoints, angleToPoint
@@ -44,13 +44,40 @@ def showImage(img, scale=2, winName='ImageScene'):
         robot.stop()
         raise ValueError('Exit by user')
 
+def scley(binLeft, binRight, offsetCenter=-55):
+    k = 0.8035
+    binRight = cv2.resize(binRight, (int(binRight.shape[1] * k), int(binRight.shape[0] * k)))
+    binLeft = binLeft[68 + offsetCenter:]
+    binRight = binRight[:-150 + offsetCenter, 9:861]
+
+    resImg = np.concatenate((binRight, binLeft), axis=0)
+    resImg = rotateImage(resImg, 1.2)
+    resImg = resImg[37:-37, 208:-93]
+    resImg = cv2.rotate(resImg, cv2.ROTATE_90_COUNTERCLOCKWISE)
+    return resImg
+
 def getScene():
     return getFullScene(cam1.read(), cam2.read())
 
 def solve(fileName='/solution/data.json'):
     task.start()
 
-    route = eval(task.getTask())[1:]
+    route = eval(task.getTask())
+    mark = route[0]
+    if 'coordinates' in mark:
+        pos, cameraId = mark['coordinates']
+        binLeft = getUndistortedImage(cam1.readRaw(), const.cam1.matrix, const.cam1.distortion)
+        binRight = getUndistortedImage(cam2.readRaw(), const.cam2.matrix, const.cam2.distortion)
+
+        cv2.circle(binLeft if cameraId == 1 else binRight, pos, 5, (255, 255, 255), -1)
+
+        rb1 = scley(binLeft, binRight, offsetCenter=-50)
+        rb2 = scley(binLeft, binRight, offsetCenter=50)
+        bbbb = cv2.bitwise_or(rb1, rb2)
+        contours, _ = cv2.findContours(bbbb, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+        contours = sorted(contours, key=cv2.contourArea, reverse=True)
+        mark['coordinates'] = list(map(int, findContourCenter(contours[0])))
+    route = [mark]
     # route = [{'name': 'p_2', 'marker_id': '2'}, {'name': 'p_3', 'marker_id': '247'}, {'name': 'p_6', 'marker_id': '215'}, {'name': 'p_7', 'marker_id': '97'}]
     imgScene = getScene()
     saveImage(imgScene)

@@ -50,7 +50,7 @@ def getScene():
 def solve(fileName='data.json'):
     task.start()
 
-    route = task.getTask()
+    route = eval(task.getTask())
     imgScene = getScene()
     saveImage(imgScene)
     resultPath = initServer(imgScene, route, fileName)
@@ -64,6 +64,7 @@ def initServer(img, route, fileName):
     robotPos, angle = detectRobot(img)
     graph, dictAruco = deserialize(fileName)
     graph = addArucos(graph, dictAruco, route)
+    print(list(graph.keys()))
     show.showGraph(img, graph)
     svImg.saveGraph(img, graph)
     #graaph = addPoints(img, graph, route)

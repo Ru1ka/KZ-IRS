@@ -15,15 +15,26 @@ cam1 = Camera(0, const.cam1.matrix, const.cam1.distortion)
 cam2 = Camera(1, const.cam2.matrix, const.cam2.distortion)
 
 while True:
-    rawImg1 = cam1.readRaw()
-    binRawImg1 = np.zeros(list(rawImg1.shape[:2]) + [1], dtype=np.uint8)
-    cv2.circle(binRawImg1, (347, 153), 6, (255, 255, 255), -1)
-    img1 = getUndistortedImage(binRawImg1, const.cam1.matrix, const.cam1.distortion)
+    rawImgLeft = cam1.readRaw()
+    rawImgRight = cam2.readRaw()
+    rawBinLeft = np.zeros(rawImgLeft.shape, dtype=np.uint8)
+    rawBinRight = np.zeros(rawImgRight.shape, dtype=np.uint8)
+
+    cv2.circle(rawBinLeft, (347, 153), 6, (255, 255, 255), -1)
+
+    binLeft = getUndistortedImage(rawBinLeft, const.cam1.matrix, const.cam1.distortion)
+    binRight = getUndistortedImage(rawBinRight, const.cam2.matrix, const.cam2.distortion)
+
     k = 0.8035
-    rightImg = cv2.resize(img1, (int(img1.shape[1] * k), int(img1.shape[0] * k)))
-    rightImg = rightImg[:, 9:861]
-    resImg = rotateImage(rightImg, 1.2)
-    #resImg = cv2.rotate(resImg, cv2.ROTATE_90_COUNTERCLOCKWISE)
-    cv2.imshow('Image1', img1)
-    cv2.imshow('Image2', binRawImg1)
+    binRight = cv2.resize(binRight, (int(binRight.shape[1] * k), int(binRight.shape[0] * k)))
+    offsetCenter = -55
+    binLeft = binLeft[68 + offsetCenter:]
+    binRight = binRight[:-150 + offsetCenter, 9:861]
+
+    resImg = np.concatenate((binRight, binLeft), axis=0)
+    resImg = rotateImage(resImg, 1.2)
+    resImg = resImg[37:-37, 208:-93]
+    resImg = cv2.rotate(resImg, cv2.ROTATE_90_COUNTERCLOCKWISE)
+
+    cv2.imshow('Image', resImg)
     if cv2.waitKey(1) == 27: break

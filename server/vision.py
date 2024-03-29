@@ -246,5 +246,9 @@ def binCenRobImage(img):
     imgBinary = np.concatenate((imgBinary1, imgBinary2, imgBinary3, imgBinary4), axis=0)
     return imgBinary
 
+
+def findPoints(img1, img2, img):
+    pass
+
 def showImage(img):
     while cv2.waitKey(1) != 27: cv2.imshow('Image', img)

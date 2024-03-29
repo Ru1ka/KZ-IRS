@@ -21,8 +21,8 @@ from const import ConstPlenty
 from vision import detectRobot
 
 const = ConstPlenty()
-LOCAL = False
-DEBUG = False
+LOCAL = True
+DEBUG = True
 IMAGE_FILE = "88.png"
 
 if not LOCAL and not DEBUG:
@@ -162,6 +162,14 @@ def debugLocal():
         {"name":"p_12","marker_id":"13"},
         {"name":"p_19","marker_id":"118"},
     ]
+    route = [{
+        "name":"p_1","marker_id":"143"},{"name":"p_2","coordinates":[361,523]},
+        {"name":"p_3","marker_id":"61"},{"name":"p_4","coordinates":[977,217]},
+        {"name":"p_5","marker_id":"21"},{"name":"p_6","marker_id":"79"},
+        {"name":"p_7","coordinates":[347,153]},
+        {"name":"p_8","coordinates":[863,496]},
+        {"name":"p_9","coordinates":[565,501]},
+        {"name":"p_10","coordinates":[393,227]}]
     # shuffle(route)
     # route *= 3
     # route = route[:50]
@@ -182,6 +190,7 @@ def debugLocal():
     
     graph = refactorGraph(graph)  # Двухстороннее движение
     graph = deletePoints(graph, 270, 300)
+    show.showGraph(img, graph)
 
     dictAruco = detectAruco(img, markerCorners, markerIds, 100)
     
@@ -190,8 +199,9 @@ def debugLocal():
     # -----////----- #
     if DEBUG:
         graph = addArucos(graph, dictAruco, route)
-        # graph = addPoints(img, graph, route)
-        # show.showGraph(img, graph)
+        graph = addPoints(graph, route)
+        show.showGraph(img, graph)
+
 
         path = getResultPositions(graph, robotPos, route)
         print(len(path))
@@ -227,7 +237,7 @@ def InitLocal(filename="data.json"):
     robotPos = (0, 0)
     graph, dictAruco = deserialize(filename)
     graph = addArucos(graph, dictAruco, route)
-    graph = addPoints(img, graph, route)
+    # graph = addPoints(img, graph, route)
     path = getResultPositions(graph, robotPos, route)
     return path
 

@@ -162,14 +162,14 @@ def debugLocal():
         {"name":"p_12","marker_id":"13"},
         {"name":"p_19","marker_id":"118"},
     ]
-    route = [{
-        "name":"p_1","marker_id":"143"},{"name":"p_2","coordinates":[361,523]},
-        {"name":"p_3","marker_id":"61"},{"name":"p_4","coordinates":[977,217]},
-        {"name":"p_5","marker_id":"21"},{"name":"p_6","marker_id":"79"},
-        {"name":"p_7","coordinates":[347,153]},
-        {"name":"p_8","coordinates":[863,496]},
-        {"name":"p_9","coordinates":[565,501]},
-        {"name":"p_10","coordinates":[393,227]}]
+    # route = [{
+    #     "name":"p_1","marker_id":"143"},{"name":"p_2","coordinates":[361,523]},
+    #     {"name":"p_3","marker_id":"61"},{"name":"p_4","coordinates":[977,217]},
+    #     {"name":"p_5","marker_id":"21"},{"name":"p_6","marker_id":"79"},
+    #     {"name":"p_7","coordinates":[347,153]},
+    #     {"name":"p_8","coordinates":[863,496]},
+    #     {"name":"p_9","coordinates":[565,501]},
+    #     {"name":"p_10","coordinates":[393,227]}]
     # shuffle(route)
     # route *= 3
     # route = route[:50]

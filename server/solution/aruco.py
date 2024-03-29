@@ -42,24 +42,18 @@ class ArucoDetector:
         return markerCorners, markerIds
 
 
-def findArucoMarkers(img, size=3, timer=3, show=False):
-    detector = ArucoDetector(size, ALL_ARUCO_KEYS)
-    imgGray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    imgBinary = cv2.adaptiveThreshold(imgGray, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 41, 17)
+def findArucoMarkers(img, size=3, timer=2, blockSize=149, C=0, sizeBlur=2, show=False):
+    detector = ArucoDetector(size, whitelist=ALL_ARUCO_KEYS)
     lastTime = time.time()
     markerDict = {}
     while lastTime + timer > time.time():
+        imgGray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        #imgBinary = cv2.adaptiveThreshold(imgGray, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, blockSize, C)
+        imgBinary = cv2.blur(imgGray, (sizeBlur, sizeBlur))
         markerCorners, markerIds = detector.detectMarkers(imgBinary)
-        for cnr, id in zip(markerCorners, markerIds):
-            markerDict[id[0]] = cnr
+        for cnr, id in zip(markerCorners, markerIds): markerDict[id[0]] = cnr
     markerCorners, markerIds = list(markerDict.values()), list(markerDict.keys())
-    if show:
-        imgShow = img.copy()
-        aruco.drawDetectedMarkers(imgShow, markerCorners)
-        for cnr, id in zip(markerCorners, markerIds):
-            pos = list(map(int, list(cnr[0][0])))
-            cv2.putText(imgShow, str(id), pos, cv2.FONT_HERSHEY_COMPLEX, 1, (0, 0, 255), 2)
-        showImage(cv2.cvtColor(imgShow, cv2.COLOR_BGR2GRAY))
+    if show: showImage(imgBinary)
     return markerCorners, markerIds
 
 def detectAruco(img, markerCorners, markerIds, threshold, size=3, show=False):

@@ -11,7 +11,7 @@ class Camera:
 
     def readRaw(self):
         rawImg = cv2.imread('../../distortion/dataset/mappp1/5.png') if self.index == 0 \
-            else cv2.imread('../../distortion/dataset/mappp2/5.png')
+             else cv2.imread('../../distortion/dataset/mappp2/5.png')
         return rawImg
 
     def read(self):

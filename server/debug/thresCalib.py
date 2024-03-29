@@ -1,9 +1,12 @@
 from cv2 import createTrackbar, getTrackbarPos
 import cv2
-from camera import Camera, showImage
+from camera import Camera
 import numpy as np
 
 def nothing(*arg): pass
+
+def showImage(img, winName='Image'):
+    while cv2.waitKey(1) != 27: cv2.imshow(winName, img)
 
 def createBars():
     cv2.namedWindow('buttons')
@@ -25,9 +28,12 @@ def getBinaryImage(img, blockSize, C, sizeBlur):
     imgBinary = cv2.blur(imgBinary, (sizeBlur, sizeBlur))
     return imgBinary
 
+class cammm:
+    def read(self):
+        return cv2.imread('../solution/Camera.png')
+
 def main():
-    camera = Camera(0)
-    camera.setDefaultSettings()
+    camera = cammm()
     createBars()
     while True:
         img = camera.read()

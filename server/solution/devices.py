@@ -52,16 +52,15 @@ class Robot:
             self.send(command.encode('utf-8'))
 
 class Camera:
-    def __init__(self, index, task, matrix, distortion):
-        self.index = index
-        self.task = task
+    def __init__(self, url, matrix, distortion):
+        self.url = url
         self.matrix = matrix
         self.distortion = distortion
+        self.cap = cv2.VideoCapture(url)
 
     def readRaw(self):
-        sceneImages = self.task.getTaskScene()
-        rawImg = sceneImages[self.index]
-        return rawImg
+        success, readRaw = self.cap.read()
+        return readRaw if success else None
 
     def read(self):
         rawImg = self.readRaw()

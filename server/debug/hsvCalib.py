@@ -29,10 +29,12 @@ def getBinaryImage(img, blockSize, C, sizeBlur):
     imgBinary = cv2.blur(imgBinary, (sizeBlur, sizeBlur))
     return imgBinary
 
+class cammm:
+    def read(self):
+        return cv2.imread('../solution/Camera.png')
 def main():
     countDiv = int(input('Введите количество делений: '))
-    camera = Camera(0)
-    camera.setDefaultSettings()
+    camera = cammm()
     for n in range(countDiv): createBars(n)
     while True:
         img = camera.read()

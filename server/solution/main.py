@@ -5,7 +5,7 @@ from vision import *
 from graph import serialize, deserialize
 from aruco import findArucoMarkers, detectAruco
 from vision import getMarkupPositions
-from buildGraph import getGraph, refactorGraph, addArucos, deletePoints
+from buildGraph import getGraph, refactorGraph, addArucos, deletePoints, addPoints
 from algorithms import getRoadLines, extendLines, getResultPositions
 from funcs import getDistanceBetweenPoints, getErrorByPoints, angleToPoint
 import show
@@ -63,7 +63,7 @@ def initServer(img, route, fileName):
     graph, dictAruco = deserialize(fileName)
     graph = addArucos(graph, dictAruco, route)
     svImg.saveGraph(img, graph)
-    #graph = addPoints(img, graph, route)
+    #graaph = addPoints(img, graph, route)
     svImg.saveGraph(img, graph)
     path = getResultPositions(graph, robotPos, route)
 
@@ -255,8 +255,8 @@ def InitLocal(filename="data.json"):
     robotPos = (0, 0)
     graph, dictAruco = deserialize(filename)
     graph = addArucos(graph, dictAruco, route)
-    # show.showGraph(img, graph)
-    # graph = addPoints(img, graph, route)
+    show.showGraph(img, graph)
+    graph = addPoints(img, graph, route)
     show.showGraph(img, graph)
     path = getResultPositions(graph, robotPos, route)
     show.showResult(img, path, route, dictAruco)
